@@ -1,0 +1,11 @@
+# env files
+.env
+config.env
+
+# vs build remnants
+.vs/
+x64/
+Debug/
+Release/
+*.obj
+*.tlog
