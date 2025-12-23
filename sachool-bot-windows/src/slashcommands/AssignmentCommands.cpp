@@ -6,30 +6,51 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
 	const dpp::snowflake userID = event.command.get_issuing_user().id;
     const dpp::snowflake channelID = event.command.get_channel().id;
 
-	if (subcommand.name == "add") {
-        event.co_thinking(true);
-		str name = std::get<str>(event.get_parameter("name"));
-		str subject = std::get<str>(event.get_parameter("course/subject"));
-		dpp::snowflake fileID = std::get<dpp::snowflake>(event.get_parameter("file"));
-		dpp::attachment att = event.command.get_resolved_attachment(fileID);
-		int importance = std::get<int64_t>(event.get_parameter("importance"));
-		str dueDate = std::get<str>(event.get_parameter("duedate"));
+    if (subcommand.name == "add") {
+        event.thinking(true);
+        str name = std::get<str>(event.get_parameter("name"));
+        str subject = std::get<str>(event.get_parameter("subject"));
+        str dueDate = std::get<str>(event.get_parameter("duedate"));
 
-		Assignment assignment = { name, subject, att.url, dueDate, importance };
-		if (bool assignmentAdded = db.addAssignment(userID.str(), assignment); !assignmentAdded) {
-            co_await event.co_reply("Unexpected error occurred when trying to add assignment, please try again later.");
-			co_return;
-		}
+        auto fileIDParam = event.get_parameter("file");
+        dpp::snowflake fileID;
+        if (std::holds_alternative<dpp::snowflake>(fileIDParam)) {
+            fileID = std::get<dpp::snowflake>(fileIDParam);
+        }
+        str userPfp = event.command.get_issuing_user().get_avatar_url();
+        str assignmentURL = "No URL provided";
 
-        dpp::embed assignmentEmbed = dpp::embed()
+        dpp::embed assignmentEmbed;
+        // fix this logic later (code can be cleaned up here)
+        if (!fileID.empty()) {
+            dpp::attachment att = event.command.get_resolved_attachment(fileID);
+            assignmentURL = att.url;
+            assignmentEmbed.set_url(assignmentURL);
+        }
+
+        int64_t importanceVal = 0;
+        auto importanceParam = event.get_parameter("importance");
+        if (std::holds_alternative<int64_t>(importanceParam)) {
+            importanceVal = std::get<int64_t>(importanceParam);
+        }
+
+        Assignment assignment = { name, subject, assignmentURL, dueDate, importanceVal };
+        if (bool assignmentAdded = db.addAssignment(userID.str(), assignment); !assignmentAdded) {
+            co_await event.co_edit_response("Unexpected error occurred when trying to add assignment, please try again later.");
+            co_return;
+        }
+
+        str importanceStr = std::to_string(importanceVal);
+        if (!importanceVal) importanceStr = "No importance value listed";
+
+        assignmentEmbed
             .set_color(dpp::colors::green_leaves)
             .set_title("Assignment " + name + " added!")
-            .set_url(att.url)
             .set_description(whenDue(dueDate))
-            .set_thumbnail("https://dpp.dev/DPP-Logo.png") // change to bot icon.
+            .set_thumbnail(userPfp)
             .add_field(
                 "Assignment importance",
-                std::to_string(importance)
+                importanceStr
             )
             .add_field(
                 "Subject",
@@ -44,10 +65,9 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
             .set_image("https://dpp.dev/DPP-Logo.png") // replace with bot icon
             .set_timestamp(time(0));
 
-        /* Create a message with the content as our new embed. */
         dpp::message msg(channelID, assignmentEmbed);
-        
-        co_await event.co_reply(msg);
+
+        co_await event.co_edit_response(msg);
         co_return;
-	}
+    }
 }

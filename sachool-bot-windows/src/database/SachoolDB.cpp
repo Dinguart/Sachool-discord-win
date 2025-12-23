@@ -3,7 +3,8 @@
 SachoolDB::SachoolDB(constStrRef host, constStrRef user,
 	constStrRef password, constStrRef database) :
 	m_Host(host), m_User(user), m_Password(password), 
-	m_Database(database), m_Con(nullptr), m_Connected(false) {}
+	m_Database(database), m_Con(nullptr), m_Connected(false) {
+}
 
 SachoolDB::~SachoolDB() {
 	disconnect();
@@ -53,20 +54,17 @@ bool SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignmen
 	}
 
 	try {
+		str assignmentJson = std::format(
+			R"({{"name": "{}", "subject": "{}", "url": "{}", "duedate": "{}", "importance": "{}"}})",
+			assignment.name, assignment.subject, assignment.url, assignment.duedate, assignment.importance
+		);
 		std::unique_ptr<sql::PreparedStatement> stmt(
 			m_Con->prepareStatement("INSERT INTO userprofiles (discordid, assignments) VALUES (?, ?)")
 		);
 		stmt->setString(1, discordID);
-		// format the string here
-		str assignmentJson = std::format(
-			R"({{"name": "{}", 
-			"subject": "{}", 
-			"url": "{}", 
-			"duedate": "{}", 
-			"importance": "{}"}})", 
-			assignment.name, assignment.subject, assignment.url, assignment.duedate, assignment.importance
-		);
 		stmt->setString(2, assignmentJson);
+		stmt->executeQuery();
+
 		return true;
 	}
 	catch (const sql::SQLException& e) {

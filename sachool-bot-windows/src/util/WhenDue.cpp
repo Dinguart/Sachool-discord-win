@@ -5,10 +5,10 @@ Date dateParse(const std::string& date) {
 	std::string year = date.substr(0, find);
 	std::string newDate = date.substr(find + 1);
 	find = newDate.find('/');
-	std::string month = date.substr(0, find);
-	std::string day = date.substr(find + 1);
+	std::string month = newDate.substr(0, find);
+	std::string day = newDate.substr(find + 1);
 
-	uint16_t yearNum, monthNum, dayNum;
+	int16_t yearNum, monthNum, dayNum;
 	yearNum = std::stoul(year);
 	monthNum = std::stoul(month);
 	dayNum = std::stoul(day);
@@ -24,10 +24,12 @@ std::string whenDue(const std::string& date) {
 	Date dueDate = dateParse(date);
 	Date currDate = dateParse(dateStr);
 
-	uint16_t yearDiff, monthDiff, dayDiff;
+	int16_t yearDiff, monthDiff, dayDiff;
 	yearDiff = dueDate.year - currDate.year;
 	monthDiff = dueDate.month - currDate.month;
 	dayDiff = dueDate.day - currDate.day;
+
+
 
 	std::string result("The assignment is ");
 	// separated for readability
@@ -38,6 +40,6 @@ std::string whenDue(const std::string& date) {
 
 	if (!yearDiff && !monthDiff && !dayDiff) return "The assignment is due today!";
 
-	result += std::format("{}Y, {}m, {}d", yearDiff, monthDiff, dayDiff);
+	result += std::format("{} year(s), {} month(s), {} day(s)", abs(yearDiff), abs(monthDiff), abs(dayDiff));
 	return result;
 }

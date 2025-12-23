@@ -31,7 +31,7 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, SachoolDB& db) {
 	std::string commandName = event.command.get_command_name();
 
-	if (commandName == "Assignment") {
+	if (commandName == "assignment") {
 		co_await handleAssignmentCommands(bot, event, db);
 	}
 

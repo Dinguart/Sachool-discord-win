@@ -1,6 +1,5 @@
 # env files
-.env
-config.env
+*.env
 
 # vs build remnants
 .vs/

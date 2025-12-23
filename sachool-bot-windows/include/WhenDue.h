@@ -2,9 +2,10 @@
 #include <string>
 #include <chrono>
 #include <format>
+#include <print>
 
 struct Date {
-	uint16_t year, month, day;
+	int16_t year, month, day;
 };
 
 Date dateParse(const std::string& date);
