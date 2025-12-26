@@ -53,6 +53,8 @@ bool SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignmen
 		return false;
 	}
 
+	if (assignmentExists(discordID, assignment.name)) return false;
+
 	try {
 		str assignmentJson = std::format(
 			R"({{"name": "{}", "subject": "{}", "url": "{}", "duedate": "{}", "importance": "{}"}})",
@@ -72,6 +74,61 @@ bool SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignmen
 	}
 	catch (const std::exception& e) {
 		std::println("Database assignment insertion exception (std) : {}", e.what());
+	}
+	return false;
+}
+
+bool SachoolDB::removeAssignment(constStrRef discordID, constStrRef assignmentName) const
+{
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return false;
+	}
+
+	if (!assignmentExists(discordID, assignmentName)) return false;
+
+	try {
+		std::unique_ptr<sql::PreparedStatement> stmt(
+			m_Con->prepareStatement("DELETE FROM userprofiles WHERE discordid = ? AND assignments->>'$.name' = ?")
+		);
+		stmt->setString(1, discordID);
+		stmt->setString(2, assignmentName);
+		stmt->executeQuery();
+
+		return true;
+	}
+	catch (const sql::SQLException& e) {
+		std::println("Database assignment removal exception (sql) : {}", e.what());
+	}
+	catch (const std::exception& e) {
+		std::println("Database assignment removal exception (std) : {}", e.what());
+	}
+	return false;
+}
+
+bool SachoolDB::assignmentExists(constStrRef discordID, constStrRef assignmentName) const
+{
+	nlohmann::json json;
+	str assignmentString;
+	try {
+		std::unique_ptr<sql::PreparedStatement> stmt(
+			m_Con->prepareStatement("SELECT * FROM userprofiles WHERE discordid = ?")
+		);
+		stmt->setString(1, discordID);
+
+		std::unique_ptr<sql::ResultSet> res(stmt->executeQuery());
+		while (res->next()) {
+			assignmentString = res->getString("assignments");
+			json = nlohmann::json::parse(assignmentString);
+
+			if (json["name"].get<std::string>() == assignmentName) return true;
+		}
+	}
+	catch (const sql::SQLException& e) {
+		std::println("Database assignment existence exception (sql) : {}", e.what());
+	}
+	catch (const std::exception& e) {
+		std::println("Database assignment existence exception (std) : {}", e.what());
 	}
 	return false;
 }

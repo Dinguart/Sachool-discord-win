@@ -14,7 +14,7 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 
 	// assignment subcommands
 	dpp::slashcommand assignment("Assignment", "Commands for assignments.", bot->me.id);
-	// Assignment add
+	// assignment add
 	assignment.add_option(
 		dpp::command_option(dpp::co_sub_command, "add", "add an assignment to your profile.")
 		.add_option(dpp::command_option(dpp::co_string, "name", "name of the assignment.", true))
@@ -22,6 +22,11 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 		.add_option(dpp::command_option(dpp::co_string, "duedate", "when is the assignment due? (YYYY/MM/DD)", true))
 		.add_option(dpp::command_option(dpp::co_attachment, "file", "file containing the assignment/instructions.", false))
 		.add_option(dpp::command_option(dpp::co_integer, "importance", "importance value (1-5) of the assignment", false))
+	);
+	// assignment remove
+	assignment.add_option( // have some logic if two assignments with same name exist.
+		dpp::command_option(dpp::co_sub_command, "remove", "Specify an assignment to remove.")
+		.add_option(dpp::command_option(dpp::co_string, "name", "name of the assignment.", true))
 	);
 	commands.push_back(assignment);
 

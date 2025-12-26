@@ -140,11 +140,13 @@
     <ClCompile Include="src\Sachool.cpp" />
     <ClCompile Include="src\SlashCommands.cpp" />
     <ClCompile Include="src\slashcommands\AssignmentCommands.cpp" />
+    <ClCompile Include="src\util\FindString.cpp" />
     <ClCompile Include="src\util\ReadFile.cpp" />
     <ClCompile Include="src\util\WhenDue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssignmentCommands.h" />
+    <ClInclude Include="include\FindString.h" />
     <ClInclude Include="include\ReadFile.h" />
     <ClInclude Include="include\Sachool.h" />
     <ClInclude Include="include\SachoolDB.h" />

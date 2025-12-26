@@ -5,9 +5,11 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
 	auto& subcommand = cmdData.options[0];
 	const dpp::snowflake userID = event.command.get_issuing_user().id;
     const dpp::snowflake channelID = event.command.get_channel().id;
+    constStr userPfp = event.command.get_issuing_user().get_avatar_url();
+    
+    event.thinking(true); // use edit response to reply
 
     if (subcommand.name == "add") {
-        event.thinking(true);
         str name = std::get<str>(event.get_parameter("name"));
         str subject = std::get<str>(event.get_parameter("subject"));
         str dueDate = std::get<str>(event.get_parameter("duedate"));
@@ -17,7 +19,6 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
         if (std::holds_alternative<dpp::snowflake>(fileIDParam)) {
             fileID = std::get<dpp::snowflake>(fileIDParam);
         }
-        str userPfp = event.command.get_issuing_user().get_avatar_url();
         str assignmentURL = "No URL provided";
 
         dpp::embed assignmentEmbed;
@@ -66,6 +67,26 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
             .set_timestamp(time(0));
 
         dpp::message msg(channelID, assignmentEmbed);
+
+        co_await event.co_edit_response(msg);
+        co_return;
+    }
+    else if (subcommand.name == "remove") {
+        str assignmentName = std::get<str>(event.get_parameter("name"));
+        
+        if (bool assignmentRemoved = db.removeAssignment(userID.str(), assignmentName); !assignmentRemoved) {
+            co_await event.co_edit_response("Unexpected error occurred when trying to remove assignment, please try again later.");
+            co_return;
+        }
+
+        dpp::embed removalEmbed;
+        removalEmbed.set_title("Assignment " + assignmentName + " removed successfully!")
+            .set_color(dpp::colors::red_wine)
+            .set_thumbnail(userPfp)
+            .set_image("https://dpp.dev/DPP-Logo.png")
+            .set_timestamp(time(0));
+        
+        dpp::message msg(channelID, removalEmbed);
 
         co_await event.co_edit_response(msg);
         co_return;
