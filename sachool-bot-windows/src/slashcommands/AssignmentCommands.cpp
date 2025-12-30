@@ -36,9 +36,18 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
         }
 
         Assignment assignment = { name, subject, assignmentURL, dueDate, importanceVal };
-        if (bool assignmentAdded = db.addAssignment(userID.str(), assignment); !assignmentAdded) {
-            co_await event.co_edit_response("Unexpected error occurred when trying to add assignment, please try again later.");
-            co_return;
+        if (auto assignmentAdded = db.addAssignment(userID.str(), assignment); !assignmentAdded.state) {
+            switch (assignmentAdded.context.value()) {
+            case Context::NORMAL: 
+                co_await event.co_edit_response("This assignment already exists, assignment insertion failed."); 
+                co_return;
+                break;
+            case Context::EXCEPTION:
+            case Context::INTERNAL: 
+                co_await event.co_edit_response("Unexpected error occurred when trying to add assignment, please try again later."); 
+                co_return;
+                break;
+            }
         }
 
         str importanceStr = std::to_string(importanceVal);
@@ -74,9 +83,18 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
     else if (subcommand.name == "remove") {
         str assignmentName = std::get<str>(event.get_parameter("name"));
         
-        if (bool assignmentRemoved = db.removeAssignment(userID.str(), assignmentName); !assignmentRemoved) {
-            co_await event.co_edit_response("Unexpected error occurred when trying to remove assignment, please try again later.");
-            co_return;
+        if (auto assignmentRemoved = db.removeAssignment(userID.str(), assignmentName); !assignmentRemoved.state) {
+            switch (assignmentRemoved.context.value()) {
+            case Context::NORMAL: 
+                co_await event.co_edit_response("Assignment to remove was not found listed."); 
+                co_return;
+                break;
+            case Context::EXCEPTION:
+            case Context::INTERNAL: 
+                co_await event.co_edit_response("Unexpected error occurred when trying to remove assignment, please try again later."); 
+                co_return;
+                break;
+            }
         }
 
         dpp::embed removalEmbed;

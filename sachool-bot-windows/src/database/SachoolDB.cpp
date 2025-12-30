@@ -46,14 +46,14 @@ void SachoolDB::setDatabase(constStrRef database) {
 
 // assignment methods
 
-bool SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignment) const
+StateContext SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignment) const
 {
 	if (!m_Connected) {
 		std::println("Not connected to the database.\n");
-		return false;
+		return { Context::INTERNAL, false };
 	}
 
-	if (assignmentExists(discordID, assignment.name)) return false;
+	if (assignmentExists(discordID, assignment.name)) return { Context::NORMAL, false };
 
 	try {
 		str assignmentJson = std::format(
@@ -67,7 +67,7 @@ bool SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignmen
 		stmt->setString(2, assignmentJson);
 		stmt->executeQuery();
 
-		return true;
+		return { std::nullopt, true };
 	}
 	catch (const sql::SQLException& e) {
 		std::println("Database assignment insertion exception (sql) : {}", e.what());
@@ -75,17 +75,17 @@ bool SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignmen
 	catch (const std::exception& e) {
 		std::println("Database assignment insertion exception (std) : {}", e.what());
 	}
-	return false;
+	return { Context::EXCEPTION, false };
 }
 
-bool SachoolDB::removeAssignment(constStrRef discordID, constStrRef assignmentName) const
+StateContext SachoolDB::removeAssignment(constStrRef discordID, constStrRef assignmentName) const
 {
 	if (!m_Connected) {
 		std::println("Not connected to the database.\n");
-		return false;
+		return { Context::INTERNAL, false };
 	}
 
-	if (!assignmentExists(discordID, assignmentName)) return false;
+	if (!assignmentExists(discordID, assignmentName)) return { Context::NORMAL, false };
 
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
@@ -95,7 +95,7 @@ bool SachoolDB::removeAssignment(constStrRef discordID, constStrRef assignmentNa
 		stmt->setString(2, assignmentName);
 		stmt->executeQuery();
 
-		return true;
+		return { std::nullopt, true };
 	}
 	catch (const sql::SQLException& e) {
 		std::println("Database assignment removal exception (sql) : {}", e.what());
@@ -103,7 +103,7 @@ bool SachoolDB::removeAssignment(constStrRef discordID, constStrRef assignmentNa
 	catch (const std::exception& e) {
 		std::println("Database assignment removal exception (std) : {}", e.what());
 	}
-	return false;
+	return { Context::EXCEPTION, false };
 }
 
 bool SachoolDB::assignmentExists(constStrRef discordID, constStrRef assignmentName) const
@@ -121,7 +121,7 @@ bool SachoolDB::assignmentExists(constStrRef discordID, constStrRef assignmentNa
 			assignmentString = res->getString("assignments");
 			json = nlohmann::json::parse(assignmentString);
 
-			if (json["name"].get<std::string>() == assignmentName) return true;
+			if (json["name"].get_ref<const std::string&>() == assignmentName) return true;
 		}
 	}
 	catch (const sql::SQLException& e) {
