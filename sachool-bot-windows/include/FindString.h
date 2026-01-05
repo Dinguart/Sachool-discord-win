@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
+#include <unordered_map>
 
 bool findString(const std::string& original, const std::string& substr);
-// std::pair which returns if string exists, and where in json was located
-std::pair<bool, std::string> findAssignmentString(const std::string& original, const std::string& substr);
+
+std::pair<std::string, std::string> SeparateByDelimPair(const std::string& str, const char delim);

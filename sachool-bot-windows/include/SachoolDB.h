@@ -42,28 +42,33 @@ struct Assignment {
 	short importance;
 };
 
-class SachoolDB {
-private:
-	sql::Connection* m_Con;
-	str m_Host, m_User, m_Password, m_Database;
-	bool m_Connected;
+namespace Database {
+	class SachoolDB {
+	private:
+		sql::Connection* m_Con;
+		str m_Host, m_User, m_Password, m_Database;
+		bool m_Connected;
 
-	bool assignmentExists(constStrRef discordID, constStrRef assignmentName) const;
-public:
-	SachoolDB(constStrRef host, constStrRef user,
-		constStrRef password, constStrRef database);
-	~SachoolDB();
+		bool assignmentExists(constStrRef discordID, constStrRef assignmentName) const;
+	public:
+		SachoolDB(constStrRef host, constStrRef user,
+			constStrRef password, constStrRef database);
+		~SachoolDB();
 
-	bool connect();
-	void disconnect();
-	bool isConnected() const;
-	void setDatabase(constStrRef database);
+		bool connect();
+		void disconnect();
+		bool isConnected() const;
+		void setDatabase(constStrRef database);
 
-	// attachment methods
+		// attachment methods
 
-	/*
-	adds an assignment object to the mysql database associated with the discordID of the user
-	*/
-	StateContext addAssignment(constStrRef discordID, const Assignment& assignment) const;
-	StateContext removeAssignment(constStrRef discordID, constStrRef assignmentName) const;
-};
+
+		// simple getters
+		std::optional<Assignment> getAssignmentProperties(constStrRef discordID, constStrRef assignmentName) const;
+		/*
+		adds an assignment object to the mysql database associated with the discordID of the user
+		*/
+		StateContext addAssignment(constStrRef discordID, const Assignment& assignment) const;
+		StateContext removeAssignment(constStrRef discordID, constStrRef assignmentName) const;
+	};
+}

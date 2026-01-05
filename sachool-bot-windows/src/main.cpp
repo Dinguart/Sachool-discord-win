@@ -19,10 +19,10 @@ int main() {
 	DB_USER = configMap->at("DB_USER");
 	DB_PASS = configMap->at("DB_PASS");
 	DB_NAME = configMap->at("DB_NAME");
-	SachoolDB sachoolDB(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+	Database::SachoolDB sachoolDB(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	sachoolDB.connect();
 
 	// init bot
 	constStr BOT_TOKEN = configMap->at("BOT_TOKEN");
-	Sachool sachoolBot(BOT_TOKEN, sachoolDB);
+	Bot::Sachool sachoolBot(BOT_TOKEN, sachoolDB);
 }

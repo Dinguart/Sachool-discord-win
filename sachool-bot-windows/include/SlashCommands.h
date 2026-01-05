@@ -6,7 +6,10 @@
 #include "SachoolDB.h"
 
 #include "AssignmentCommands.h"
+#include "FindString.h"
 
 void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_t& event);
 
-dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, SachoolDB& db);
+dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, Database::SachoolDB& db);
+
+dpp::task<void> handleClickEvents(std::shared_ptr <dpp::cluster>& bot, const dpp::select_click_t& event, Database::SachoolDB& db);

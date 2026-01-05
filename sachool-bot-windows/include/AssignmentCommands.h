@@ -6,4 +6,4 @@
 
 #include "WhenDue.h"
 
-dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp::slashcommand_t event, const SachoolDB& db);
+dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp::slashcommand_t event, const Database::SachoolDB& db);

@@ -1,6 +1,6 @@
 #include "../../include/AssignmentCommands.h"
 
-dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp::slashcommand_t event, const SachoolDB& db) {
+dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp::slashcommand_t event, const Database::SachoolDB& db) {
 	dpp::command_interaction cmdData = event.command.get_command_interaction();
 	auto& subcommand = cmdData.options[0];
 	const dpp::snowflake userID = event.command.get_issuing_user().id;
@@ -82,7 +82,7 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
     }
     else if (subcommand.name == "remove") {
         str assignmentName = std::get<str>(event.get_parameter("name"));
-        
+            
         if (auto assignmentRemoved = db.removeAssignment(userID.str(), assignmentName); !assignmentRemoved.state) {
             switch (assignmentRemoved.context.value()) {
             case Context::NORMAL: 
@@ -107,6 +107,31 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
         dpp::message msg(channelID, removalEmbed);
 
         co_await event.co_edit_response(msg);
+        co_return;
+    }
+    else if (subcommand.name == "convert") {
+        str assignmentName = std::get<str>(event.get_parameter("name"));
+
+        if (auto assignmentURL = db.getAssignmentProperties(userID.str(), assignmentName).value().url; assignmentURL.empty()) {
+            co_await event.co_edit_response("Assignment provided does not contain a URL.");
+            co_return;
+        }
+
+        dpp::message viewSelect(channelID.str(), "Select a file format to convert this assignment to!");
+
+        viewSelect.add_component(
+            dpp::component().add_component(
+                dpp::component()
+                .set_type(dpp::cot_selectmenu)
+                .set_placeholder("File format dropdown") // the value is "[fileformat]-[byte offset]-[byte size]"
+                .add_select_option(dpp::select_option("png", "png-0-8", "png file format"))
+                .add_select_option(dpp::select_option("pdf", "pdf-0-5", "pdf file format"))
+                .add_select_option(dpp::select_option("ppm", "ppm-0-3", "ppm file format (defaulted to p6)"))
+                .set_id("fileformat-view")
+            )
+        );
+
+        co_await event.co_edit_response(viewSelect);
         co_return;
     }
 }

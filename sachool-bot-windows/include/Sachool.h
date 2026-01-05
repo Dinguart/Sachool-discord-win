@@ -6,17 +6,20 @@
 #include "SlashCommands.h"
 #include "SachoolDB.h"
 
-class Sachool {
-private:
-	SachoolDB m_Db;
-	std::shared_ptr<dpp::cluster> m_Bot;
-	std::string m_BotToken;
-	
-	void commandsSetup();
-	void commandsHandler();
-	void runBot();
+namespace Bot {
+	class Sachool {
+	private:
+		Database::SachoolDB m_Db;
+		std::shared_ptr<dpp::cluster> m_Bot;
+		std::string m_BotToken;
 
-public:
-	explicit Sachool(const std::string& botToken, SachoolDB& db);
-	void log();
-};
+		void commandsSetup();
+		void commandsHandler();
+		void clickHandler();
+		void runBot();
+
+	public:
+		explicit Sachool(const std::string& botToken, Database::SachoolDB& db);
+		void log();
+	};
+}

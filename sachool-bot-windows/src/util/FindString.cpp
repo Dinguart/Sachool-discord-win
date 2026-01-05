@@ -12,9 +12,6 @@ bool findString(const std::string& original, const std::string& substr)
 	return false;
 }
 
-std::pair<bool, std::string> findAssignmentString(const std::string& original, const std::string& substr)
-{
-	//
+std::pair<std::string, std::string> SeparateByDelimPair(const std::string& str, const char delim) {
+	return { str.substr(0, delim), str.substr(delim + 1) };
 }
-
-

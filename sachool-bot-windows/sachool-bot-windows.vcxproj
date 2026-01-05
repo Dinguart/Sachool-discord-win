@@ -137,6 +137,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\database\SachoolDB.cpp" />
+    <ClCompile Include="src\file\FileUtil.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sachool.cpp" />
     <ClCompile Include="src\SlashCommands.cpp" />
@@ -147,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AssignmentCommands.h" />
+    <ClInclude Include="include\FileUtil.h" />
     <ClInclude Include="include\FindString.h" />
     <ClInclude Include="include\ReadFile.h" />
     <ClInclude Include="include\Sachool.h" />
