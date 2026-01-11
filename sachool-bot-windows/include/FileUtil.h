@@ -1,10 +1,20 @@
 #pragma once
 #include <cstdint>
-#include <unordered_map>
 #include <string>
+#include <vector>
+#include <fstream>
+#include <map>
+#include <optional>
 
-struct FileProperty {
-	uint16_t byteSize, byteOffset;
+#include "Constants.h"
+
+extern const std::map<std::string, FileFormatSignatures::FileSpecification> signatureMap;
+
+// the return circumstance
+enum class FileContext {
+	EXCEPTION, EARLY_EOF, CONVERSION_NOT_NEEDED
 };
 
-//std::unordered_map<std::string, FileProperty> mapFiles(const std::string& fileFormat, )
+std::pair<bool, std::optional<FileContext>> convertFile(const std::string& fileID, std::ifstream& fileStream);
+
+std::pair<bool, std::optional<FileContext>> signatureCheck(std::ifstream& fileStream, const std::string& fileID);

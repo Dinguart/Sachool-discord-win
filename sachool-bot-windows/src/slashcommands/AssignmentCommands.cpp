@@ -124,9 +124,10 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
                 dpp::component()
                 .set_type(dpp::cot_selectmenu)
                 .set_placeholder("File format dropdown") // the value is "[fileformat]-[byte offset]-[byte size]"
-                .add_select_option(dpp::select_option("png", "png-0-8", "png file format"))
-                .add_select_option(dpp::select_option("pdf", "pdf-0-5", "pdf file format"))
-                .add_select_option(dpp::select_option("ppm", "ppm-0-3", "ppm file format (defaulted to p6)"))
+                .add_select_option(dpp::select_option("png", "png", "png file format"))
+                .add_select_option(dpp::select_option("pdf", "pdf", "pdf file format"))
+                .add_select_option(dpp::select_option("ppm", "ppm", "ppm file format (defaulted to p6)"))
+                .add_select_option(dpp::select_option("jpeg", "jpeg", "jpeg file format{beta}"))
                 .set_id("fileformat-view")
             )
         );

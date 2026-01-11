@@ -80,11 +80,11 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 		if (httpRes.status == 200) {
 			std::ofstream ofile(assignmentName, std::ios_base::binary);
 			ofile.write(httpRes.body.c_str(), httpRes.body.size());
-			// check the signatures
-
-			
-			
 			ofile.close();
+			// check the signatures
+			std::ifstream ifile(assignmentName, std::ios_base::binary);
+			convertFile(chosenOption, ifile);
+
 		}
 
 
