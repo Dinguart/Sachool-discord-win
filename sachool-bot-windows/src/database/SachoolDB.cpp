@@ -55,11 +55,16 @@ std::optional<Assignment> Database::SachoolDB::getAssignmentProperties(constStrR
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
 			m_Con->prepareStatement(
-				"SELECT VALUE FROM userprofiles,"
+				"SELECT jt.*FROM userprofiles,"
 				"JSON_TABLE("
-					"assignments,"
-					"'$.*' COLUMNS(value JSON PATH '$')"
-				") AS jt WHERE discordid = ? AND assignments->>'$.name' = ?;"
+				"assignments,"
+				"'$' COLUMNS("
+				"url VARCHAR(510) PATH '$.url',"
+				"name VARCHAR(255) PATH '$.name',"
+				"duedate VARCHAR(255) PATH '$.duedate',"
+				"subject VARCHAR(255) PATH '$.subject',"
+				"importance INT PATH '$.importance'"
+				")) AS jt WHERE discordid = ? AND jt.name = ?;"
 			)
 		);
 		stmt->setString(1, discordID);
@@ -68,11 +73,11 @@ std::optional<Assignment> Database::SachoolDB::getAssignmentProperties(constStrR
 
 		Assignment asmt;
 		if (res->next()) {
-			asmt.url = res->getString(0);
-			asmt.name = res->getString(1);
-			asmt.duedate = res->getString(2);
-			asmt.subject = res->getString(3);
-			asmt.importance = res->getUInt(4);
+			asmt.url = res->getString("url");
+			asmt.name = res->getString("name");
+			asmt.duedate = res->getString("duedate");
+			asmt.subject = res->getString("subject");
+			asmt.importance = res->getUInt("importance");
 		}
 		return asmt;
 	}

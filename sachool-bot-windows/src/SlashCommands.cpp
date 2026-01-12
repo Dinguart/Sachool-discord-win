@@ -83,8 +83,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 			ofile.close();
 			// check the signatures
 			std::ifstream ifile(assignmentName, std::ios_base::binary);
-			convertFile(chosenOption, ifile);
-
+			convertFile(chosenOption, ifile, FileFormatSignatures::signatureMap);
 		}
 
 

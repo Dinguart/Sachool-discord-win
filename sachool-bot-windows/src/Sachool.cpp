@@ -31,7 +31,7 @@ void Bot::Sachool::commandsHandler() {
 
 void Bot::Sachool::clickHandler() {
 	m_Bot->on_select_click([this](const dpp::select_click_t& event) -> dpp::task<void> {
-		co_await handleClickEvents(m_Bot, event);
+		co_await handleClickEvents(m_Bot, event, m_Db);
 		co_return;
 	});
 }

@@ -112,8 +112,9 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
     else if (subcommand.name == "convert") {
         str assignmentName = std::get<str>(event.get_parameter("name"));
 
-        if (auto assignmentURL = db.getAssignmentProperties(userID.str(), assignmentName).value().url; assignmentURL.empty()) {
-            co_await event.co_edit_response("Assignment provided does not contain a URL.");
+        if (auto assignmentURL = db.getAssignmentProperties(userID.str(), assignmentName); !assignmentURL.has_value() || assignmentURL.value().url.empty()) {
+            if (!assignmentURL.has_value()) co_await event.co_edit_response("Unexpected error occurred when trying to convert assignment, please try again later.");
+            else if (assignmentURL.value().url.empty()) co_await event.co_edit_response("Assignment provided does not contain a URL.");
             co_return;
         }
 

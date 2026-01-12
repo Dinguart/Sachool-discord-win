@@ -8,6 +8,7 @@
 #include "AssignmentCommands.h"
 #include "FindString.h"
 #include "FileUtil.h"
+#include "Constants.h"
 
 void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_t& event);
 
