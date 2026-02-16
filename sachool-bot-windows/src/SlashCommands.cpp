@@ -62,17 +62,37 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 	str selectMenuID = event.custom_id;
 	str chosenOption = event.values[0];
 	str userID = event.command.get_issuing_user().id.str();
+	// we keep the assignment name (allows us to do things from here)
+	auto menuIDSeparator = SeparateByDelimPair(selectMenuID, '-');
 
-	if (selectMenuID == "fileformat-view") {
+	event.thinking();
+
+	if (menuIDSeparator.second == "convert") {
 		auto pair = SeparateByDelimPair(chosenOption, '-');
-
-		auto assignmentInfo = db.getAssignmentProperties(userID, pair.first);
+		/* todo: fix error pair, its not getting assignment name as pair.first.
+		find way to connect the handleclickevents with assignment commands
+		
+		*/
+		auto assignmentInfo = db.getAssignmentProperties(userID, menuIDSeparator.first);
 		if (!assignmentInfo.has_value()) {
 			co_await event.co_edit_response("Unexpected error occurred when trying to retrieve assignment, please try again later.");
 			co_return;
 		}
 
+		str assignmentUrl = assignmentInfo.value().url;
+		if (assignmentUrl.empty()) {
+			co_await event.co_edit_response("No file URL found for this assignment");
+			co_return;
+		}
+
+		if (assignmentUrl.find("http://") != 0 && assignmentUrl.find("https://") != 0) {
+			co_await event.co_edit_response("Invalid file URL format.");
+			co_return;
+		}
 		str assignmentName = assignmentInfo.value().name;
+
+		bot->log(dpp::ll_info, "Fetching assignment URL: " + assignmentUrl);
+
 		dpp::http_request_completion_t httpRes = co_await bot->co_request(
 			assignmentInfo.value().url,
 			dpp::m_get
@@ -83,7 +103,37 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 			ofile.close();
 			// check the signatures
 			std::ifstream ifile(assignmentName, std::ios_base::binary);
-			convertFile(chosenOption, ifile, FileFormatSignatures::signatureMap);
+			auto converted = convertFile(pair.first, ifile, FileFormatSignatures::signatureMap, assignmentName);
+			if (!converted.first.successfullyConverted) {
+				if (!converted.second.has_value()) {
+					co_await event.co_edit_response("Unexpected error occurred trying to convert your assignment file.");
+				}
+				else {
+					switch (converted.second.value()) {
+					case FileContext::EXCEPTION: co_await event.co_edit_response("Unexpected error occurred trying to convert your assignment file.");
+						break;
+					case FileContext::EARLY_EOF: co_await event.co_edit_response("Problem with verifying file type, please try another file format to convert.");
+						break;
+					case FileContext::CONVERSION_NOT_NEEDED: co_await event.co_edit_response("Your file is already of this file format!");
+						break;
+					}
+				}
+				co_return;
+			}
+
+			std::unique_ptr<CImg<unsigned char>> convertedFile = std::move(converted.first.fileData);
+			/* save the image to a buffer depending on the file format, then send the buffer data to the request */
+			/* send the image to a server endpoint for retrieval of the url */
+			
+			str outputPath = assignmentName;
+			dpp::message msg;
+			msg.add_file(outputPath, dpp::utility::read_file(outputPath)).set_flags(dpp::m_ephemeral);
+
+
+			co_await event.co_edit_response(msg);
+		}
+		else {
+			co_await event.co_edit_response("An unexpected error was found when attempting to fetch to convert assignment.");
 		}
 
 

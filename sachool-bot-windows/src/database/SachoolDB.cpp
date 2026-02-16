@@ -78,8 +78,9 @@ std::optional<Assignment> Database::SachoolDB::getAssignmentProperties(constStrR
 			asmt.duedate = res->getString("duedate");
 			asmt.subject = res->getString("subject");
 			asmt.importance = res->getUInt("importance");
+
+			return asmt;
 		}
-		return asmt;
 	}
 	catch (const sql::SQLException& e) {
 		std::println("Database assignment viewing exception (sql) : {}", e.what());

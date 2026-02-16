@@ -84,17 +84,20 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
         str assignmentName = std::get<str>(event.get_parameter("name"));
             
         if (auto assignmentRemoved = db.removeAssignment(userID.str(), assignmentName); !assignmentRemoved.state) {
+            if (!assignmentRemoved.context.has_value()) { 
+                co_await event.co_edit_response("Unexpected error occurred when trying to remove assignment, please try again later.");
+                co_return;
+            }
             switch (assignmentRemoved.context.value()) {
             case Context::NORMAL: 
                 co_await event.co_edit_response("Assignment to remove was not found listed."); 
-                co_return;
                 break;
             case Context::EXCEPTION:
             case Context::INTERNAL: 
-                co_await event.co_edit_response("Unexpected error occurred when trying to remove assignment, please try again later."); 
-                co_return;
+                co_await event.co_edit_response("Unexpected error occurred when trying to remove assignment, please try again later.");           
                 break;
             }
+            co_return;
         }
 
         dpp::embed removalEmbed;
@@ -125,11 +128,11 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
                 dpp::component()
                 .set_type(dpp::cot_selectmenu)
                 .set_placeholder("File format dropdown") // the value is "[fileformat]-[byte offset]-[byte size]"
-                .add_select_option(dpp::select_option("png", "png", "png file format"))
-                .add_select_option(dpp::select_option("pdf", "pdf", "pdf file format"))
-                .add_select_option(dpp::select_option("ppm", "ppm", "ppm file format (defaulted to p6)"))
-                .add_select_option(dpp::select_option("jpeg", "jpeg", "jpeg file format{beta}"))
-                .set_id("fileformat-view")
+                .add_select_option(dpp::select_option("png", "png-png", "png file format"))
+                .add_select_option(dpp::select_option("pdf", "pdf-pdf", "pdf file format"))
+                .add_select_option(dpp::select_option("ppm", "ppm-ppm", "ppm6 file format (p6)"))
+                .add_select_option(dpp::select_option("jpeg", "jpeg-jpeg", "jpeg file format{beta}"))
+                .set_id(assignmentName+"-convert")
             )
         );
 

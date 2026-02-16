@@ -13,5 +13,11 @@ bool findString(const std::string& original, const std::string& substr)
 }
 
 std::pair<std::string, std::string> SeparateByDelimPair(const std::string& str, const char delim) {
-	return { str.substr(0, delim), str.substr(delim + 1) };
+	size_t pos = str.find(delim);
+
+	if (pos == std::string::npos) {
+		return { str, "" };
+	}
+	
+	return { str.substr(0, pos), str.substr(pos + 1) };
 }

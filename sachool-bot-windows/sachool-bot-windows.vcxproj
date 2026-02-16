@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClCompile Include="src\database\SachoolDB.cpp" />
     <ClCompile Include="src\file\FileUtil.cpp" />
+    <ClCompile Include="src\http\SachoolHttp.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Sachool.cpp" />
     <ClCompile Include="src\SlashCommands.cpp" />
@@ -147,13 +148,16 @@
     <ClCompile Include="src\util\WhenDue.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="external-includes\httplib.h" />
     <ClInclude Include="include\AssignmentCommands.h" />
+    <ClInclude Include="external-includes\CImg.h" />
     <ClInclude Include="include\Constants.h" />
     <ClInclude Include="include\FileUtil.h" />
     <ClInclude Include="include\FindString.h" />
     <ClInclude Include="include\ReadFile.h" />
     <ClInclude Include="include\Sachool.h" />
     <ClInclude Include="include\SachoolDB.h" />
+    <ClInclude Include="include\SachoolHttp.h" />
     <ClInclude Include="include\SlashCommands.h" />
     <ClInclude Include="include\WhenDue.h" />
   </ItemGroup>
