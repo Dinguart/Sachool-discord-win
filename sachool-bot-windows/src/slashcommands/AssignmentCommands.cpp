@@ -1,6 +1,6 @@
 #include "../../include/AssignmentCommands.h"
 
-dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp::slashcommand_t event, const Database::SachoolDB& db) {
+dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, const Database::SachoolDB& db) {
 	dpp::command_interaction cmdData = event.command.get_command_interaction();
 	auto& subcommand = cmdData.options[0];
 	const dpp::snowflake userID = event.command.get_issuing_user().id;
@@ -112,7 +112,7 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
         co_await event.co_edit_response(msg);
         co_return;
     }
-    else if (subcommand.name == "convert") {
+    else if (subcommand.name == "convert-image") {
         str assignmentName = std::get<str>(event.get_parameter("name"));
 
         if (auto assignmentURL = db.getAssignmentProperties(userID.str(), assignmentName); !assignmentURL.has_value() || assignmentURL.value().url.empty()) {
@@ -121,7 +121,7 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
             co_return;
         }
 
-        dpp::message viewSelect(channelID.str(), "Select a file format to convert this assignment to!");
+        dpp::message viewSelect(channelID.str(), "Select an image format to convert this assignment to!");
 
         viewSelect.add_component(
             dpp::component().add_component(
@@ -132,7 +132,7 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, dpp
                 .add_select_option(dpp::select_option("pdf", "pdf-pdf", "pdf file format"))
                 .add_select_option(dpp::select_option("ppm", "ppm-ppm", "ppm6 file format (p6)"))
                 .add_select_option(dpp::select_option("jpeg", "jpeg-jpeg", "jpeg file format{beta}"))
-                .set_id(assignmentName+"-convert")
+                .set_id(assignmentName+"|convert")
             )
         );
 

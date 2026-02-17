@@ -19,13 +19,15 @@ enum class FileContext {
 	EXCEPTION, EARLY_EOF, CONVERSION_NOT_NEEDED
 };
 
-struct ConvertedFile {
+struct ConvertedImage {
 	std::unique_ptr<CImg<unsigned char>> fileData;
 	bool successfullyConverted;
 };
 
-std::string changeFileExtension(const std::string& fileName, const std::string& extension);
+std::string getImageName(std::string& imageUrl);
 
-std::pair<ConvertedFile, std::optional<FileContext>> convertFile(const std::string& fileID, std::ifstream& fileStream, const std::map<std::string, const FileSpecification> sigMap, std::string& inputFileName);
+std::string changeImageExtension(const std::string& imageName, const std::string& extension);
+
+std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::string& fileID, std::ifstream& fileStream, const std::map<std::string, const FileSpecification> sigMap, std::string& inputImageName);
 
 std::pair<bool, std::optional<FileContext>> signatureCheck(std::ifstream& fileStream, const std::string& fileID, const std::map<std::string, const FileSpecification> sigMap);

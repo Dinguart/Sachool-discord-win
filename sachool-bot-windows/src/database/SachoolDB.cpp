@@ -175,3 +175,57 @@ bool Database::SachoolDB::assignmentExists(constStrRef discordID, constStrRef as
 	}
 	return false;
 }
+
+bool Database::SachoolDB::setImageUrl(constStrRef discordID, constStrRef Url) const {
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return false;
+	}
+
+	try {
+		std::unique_ptr<sql::PreparedStatement> stmt(
+			m_Con->prepareStatement("INSERT INTO temporaryimages (discordid, url) VALUES (?, ?)")
+		);
+		stmt->setString(1, discordID);
+		stmt->setString(2, Url);
+		stmt->executeQuery();
+
+		return true;
+	}
+	catch (const sql::SQLException& e) {
+		std::println("Database assignment existence exception (sql) : {}", e.what());
+	}
+	catch (const std::exception& e) {
+		std::println("Database assignment existence exception (std) : {}", e.what());
+	}
+	return false;
+}
+
+std::optional<str> Database::SachoolDB::getImageUrl(constStrRef discordID) const {
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return std::nullopt;
+	}
+
+	try {
+		std::unique_ptr<sql::PreparedStatement> stmt(
+			m_Con->prepareStatement("SELECT * FROM temporaryimages WHERE discordid = ?")
+		);
+		stmt->setString(1, discordID);
+		std::unique_ptr<sql::ResultSet> res(stmt->executeQuery());
+
+		str imageUrl;
+		if (res->next()) {
+			imageUrl = res->getString("url");
+		}
+
+		return imageUrl;
+	}
+	catch (const sql::SQLException& e) {
+		std::println("Database assignment existence exception (sql) : {}", e.what());
+	}
+	catch (const std::exception& e) {
+		std::println("Database assignment existence exception (std) : {}", e.what());
+	}
+	return std::nullopt;
+}

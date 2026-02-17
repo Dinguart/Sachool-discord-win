@@ -61,7 +61,8 @@ namespace Database {
 		void setDatabase(constStrRef database);
 
 		// attachment methods
-
+		bool setImageUrl(constStrRef discordID, constStrRef Url) const;
+		std::optional<str> getImageUrl(constStrRef discordID) const;
 
 		// simple getters
 		std::optional<Assignment> getAssignmentProperties(constStrRef discordID, constStrRef assignmentName) const;

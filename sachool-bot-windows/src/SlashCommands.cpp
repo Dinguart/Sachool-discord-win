@@ -14,6 +14,7 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 
 	// assignment subcommands
 	dpp::slashcommand assignment("Assignment", "Commands for assignments.", bot->me.id);
+	dpp::slashcommand utility("Utility", "General usage commands for utility.", bot->me.id);
 	/*
 	@brief
 	adds an assignment to the database, with file & importance being optional parameters
@@ -37,13 +38,21 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 
 	/*
 	@brief
-	lets you view an assignment via dropdown menu
+	lets you convert an assignment via dropdown menu
 	*/
 	assignment.add_option(
-		dpp::command_option(dpp::co_sub_command, "convert", "Will convert to different file format.")
+		dpp::command_option(dpp::co_sub_command, "convert-image", "Will convert to different image format.")
 		.add_option(dpp::command_option(dpp::co_string, "name", "name of the assignment to convert.", true))
 	);
+
+	utility.add_option(
+		dpp::command_option(dpp::co_sub_command, "convert-image", "Allows you to convert images to different formats within discord!.")
+		.add_option(dpp::command_option(dpp::co_attachment, "image", "The image to convert."))
+	);
+
+
 	commands.push_back(assignment);
+	commands.push_back(utility);
 
 	bot->global_bulk_command_create(commands);
 }
@@ -54,6 +63,9 @@ dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dp
 	if (commandName == "assignment") {
 		co_await handleAssignmentCommands(bot, event, db);
 	}
+	else if (commandName == "utility") {
+		co_await handleUtilityCommands(bot, event, db);
+	}
 
 	co_return;
 }
@@ -63,7 +75,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 	str chosenOption = event.values[0];
 	str userID = event.command.get_issuing_user().id.str();
 	// we keep the assignment name (allows us to do things from here)
-	auto menuIDSeparator = SeparateByDelimPair(selectMenuID, '-');
+	auto menuIDSeparator = SeparateByDelimPair(selectMenuID, '|');
 
 	event.thinking();
 
@@ -103,7 +115,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 			ofile.close();
 			// check the signatures
 			std::ifstream ifile(assignmentName, std::ios_base::binary);
-			auto converted = convertFile(pair.first, ifile, FileFormatSignatures::signatureMap, assignmentName);
+			auto converted = convertImage(pair.first, ifile, FileFormatSignatures::signatureMap, assignmentName);
 			if (!converted.first.successfullyConverted) {
 				if (!converted.second.has_value()) {
 					co_await event.co_edit_response("Unexpected error occurred trying to convert your assignment file.");
@@ -112,7 +124,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 					switch (converted.second.value()) {
 					case FileContext::EXCEPTION: co_await event.co_edit_response("Unexpected error occurred trying to convert your assignment file.");
 						break;
-					case FileContext::EARLY_EOF: co_await event.co_edit_response("Problem with verifying file type, please try another file format to convert.");
+					case FileContext::EARLY_EOF: co_await event.co_edit_response("Problem with verifying file type, please try another image format to convert.");
 						break;
 					case FileContext::CONVERSION_NOT_NEEDED: co_await event.co_edit_response("Your file is already of this file format!");
 						break;
@@ -121,13 +133,14 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 				co_return;
 			}
 
-			std::unique_ptr<CImg<unsigned char>> convertedFile = std::move(converted.first.fileData);
+			std::unique_ptr<CImg<unsigned char>> ConvertedImage = std::move(converted.first.fileData);
 			/* save the image to a buffer depending on the file format, then send the buffer data to the request */
 			/* send the image to a server endpoint for retrieval of the url */
 			
 			str outputPath = assignmentName;
 			dpp::message msg;
-			msg.add_file(outputPath, dpp::utility::read_file(outputPath)).set_flags(dpp::m_ephemeral);
+			msg.set_flags(dpp::m_ephemeral);
+			msg.add_file(outputPath, dpp::utility::read_file(outputPath));
 
 
 			co_await event.co_edit_response(msg);
@@ -139,5 +152,66 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 
 		// now check if the file format is the same as the one chosen
 
+	}
+	else if (menuIDSeparator.second == "convertutility") {
+		std::optional<str> optImageUrl = db.getImageUrl(userID);
+		str imageURL = optImageUrl.has_value() ? optImageUrl.value() :
+			"";
+		if (imageURL.empty()) {
+			co_await event.co_edit_response("Unexpected problem converting image.");
+			co_return;
+		}
+
+		auto pair = SeparateByDelimPair(chosenOption, '-');
+
+		bot->log(dpp::ll_info, "Fetching image URL: " + imageURL);
+
+		dpp::http_request_completion_t httpRes = co_await bot->co_request(
+			imageURL,
+			dpp::m_get
+		);
+		if (httpRes.status == 200) {
+			str imageName = getImageName(imageURL);
+			std::ofstream ofile(imageName, std::ios_base::binary);
+			ofile.write(httpRes.body.c_str(), httpRes.body.size());
+			ofile.close();
+			// check the signatures
+			std::ifstream ifile(imageName, std::ios_base::binary);
+			auto converted = convertImage(pair.first, ifile, FileFormatSignatures::signatureMap, imageName);
+			if (!converted.first.successfullyConverted) {
+				if (!converted.second.has_value()) {
+					co_await event.co_edit_response("Unexpected error occurred trying to convert your image file.");
+				}
+				else {
+					switch (converted.second.value()) {
+					case FileContext::EXCEPTION: co_await event.co_edit_response("Unexpected error occurred trying to convert your image file.");
+						break;
+					case FileContext::EARLY_EOF: co_await event.co_edit_response("Problem with verifying file type, please try another image format to convert.");
+						break;
+					case FileContext::CONVERSION_NOT_NEEDED: co_await event.co_edit_response("Your image is already of this file format!");
+						break;
+					}
+				}
+				co_return;
+			}
+
+			std::unique_ptr<CImg<unsigned char>> ConvertedImage = std::move(converted.first.fileData);
+			/* save the image to a buffer depending on the file format, then send the buffer data to the request */
+			/* send the image to a server endpoint for retrieval of the url */
+
+			str outputPath = imageName;
+			dpp::message msg;
+			msg.set_flags(dpp::m_ephemeral);
+			msg.add_file(outputPath, dpp::utility::read_file(outputPath));
+
+
+			co_await event.co_edit_response(msg);
+		}
+		else {
+			co_await event.co_edit_response("An unexpected error was found when attempting to fetch to convert assignment.");
+		}
+	}
+	else {
+		co_await event.co_edit_response("Unable to locate dropdown id");
 	}
 }

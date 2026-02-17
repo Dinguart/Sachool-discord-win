@@ -45,6 +45,9 @@
     <ClCompile Include="src\http\SachoolHttp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\slashcommands\UtilityCommands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ReadFile.h">
@@ -81,6 +84,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\SachoolHttp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\UtilityCommands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

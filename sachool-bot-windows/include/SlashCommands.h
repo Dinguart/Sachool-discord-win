@@ -6,6 +6,8 @@
 #include "SachoolDB.h"
 
 #include "AssignmentCommands.h"
+#include "UtilityCommands.h"
+
 #include "FindString.h"
 #include "FileUtil.h"
 #include "Constants.h"

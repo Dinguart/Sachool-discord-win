@@ -143,6 +143,7 @@
     <ClCompile Include="src\Sachool.cpp" />
     <ClCompile Include="src\SlashCommands.cpp" />
     <ClCompile Include="src\slashcommands\AssignmentCommands.cpp" />
+    <ClCompile Include="src\slashcommands\UtilityCommands.cpp" />
     <ClCompile Include="src\util\FindString.cpp" />
     <ClCompile Include="src\util\ReadFile.cpp" />
     <ClCompile Include="src\util\WhenDue.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="include\SachoolDB.h" />
     <ClInclude Include="include\SachoolHttp.h" />
     <ClInclude Include="include\SlashCommands.h" />
+    <ClInclude Include="include\UtilityCommands.h" />
     <ClInclude Include="include\WhenDue.h" />
   </ItemGroup>
   <ItemGroup>
