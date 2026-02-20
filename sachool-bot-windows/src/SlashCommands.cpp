@@ -110,12 +110,9 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 			dpp::m_get
 		);
 		if (httpRes.status == 200) {
-			std::ofstream ofile(assignmentName, std::ios_base::binary);
-			ofile.write(httpRes.body.c_str(), httpRes.body.size());
-			ofile.close();
 			// check the signatures
 			std::ifstream ifile(assignmentName, std::ios_base::binary);
-			auto converted = convertImage(pair.first, ifile, FileFormatSignatures::signatureMap, assignmentName);
+			auto converted = convertImage(pair.first, ifile, FileFormatSignatures::imageMap, assignmentName);
 			if (!converted.first.successfullyConverted) {
 				if (!converted.second.has_value()) {
 					co_await event.co_edit_response("Unexpected error occurred trying to convert your assignment file.");
@@ -127,6 +124,8 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 					case FileContext::EARLY_EOF: co_await event.co_edit_response("Problem with verifying file type, please try another image format to convert.");
 						break;
 					case FileContext::CONVERSION_NOT_NEEDED: co_await event.co_edit_response("Your file is already of this file format!");
+						break;
+					case FileContext::FILETYPE_NOT_FOUND: co_await event.co_edit_response("This file is not compatable with the conversion you are attempting.");
 						break;
 					}
 				}
@@ -147,6 +146,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 		}
 		else {
 			co_await event.co_edit_response("An unexpected error was found when attempting to fetch to convert assignment.");
+			std::println("Conversion assignment exception (http) : {}", httpRes.status);
 		}
 
 
@@ -177,7 +177,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 			ofile.close();
 			// check the signatures
 			std::ifstream ifile(imageName, std::ios_base::binary);
-			auto converted = convertImage(pair.first, ifile, FileFormatSignatures::signatureMap, imageName);
+			auto converted = convertImage(pair.first, ifile, FileFormatSignatures::imageMap, imageName);
 			if (!converted.first.successfullyConverted) {
 				if (!converted.second.has_value()) {
 					co_await event.co_edit_response("Unexpected error occurred trying to convert your image file.");

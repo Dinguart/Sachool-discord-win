@@ -21,7 +21,7 @@ std::string changeImageExtension(const std::string& imageName, const std::string
 		imageName + "." + extension;
 }
 
-std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::string& fileID, std::ifstream& fileStream, const std::map<std::string, const FileSpecification> sigMap, std::string& inputImageName) {
+std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::string& fileID, std::ifstream& fileStream, const std::map<std::string, const FileSpecification> imgMap, std::string& inputImageName) {
 	// for each extension check if its equal, if it is then we just return the pre-existing image into an embed
 	// otherwise, we will convert the file to the specified format that the user requested.
 
@@ -32,7 +32,7 @@ std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::st
 	byte offset, byte size, as well as the signature itself in order to avoid re-initialization each time
 	for now
 	*/
-	if (auto exists = signatureCheck(fileStream, fileID, sigMap); !exists.first) {
+	if (auto exists = signatureCheck(fileStream, fileID, imgMap); !exists.first) {
 		return { {nullptr, false }, exists.second}; // so if the file format chosen = file format given then just dont convert.
 	}
 	// otherwise, just convert to the chosen format.
@@ -71,19 +71,38 @@ std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::st
 std::pair<bool, std::optional<FileContext>> signatureCheck(std::ifstream& fileStream, const std::string& fileID, const std::map<std::string, const FileSpecification> sigMap)
 {
 	try {
-		const uint16_t byteOffset = sigMap.at(fileID).offset;
-		const uint16_t byteSize = sigMap.at(fileID).signature.size();
+		if (!sigMap.contains(fileID))
+			return { false, FileContext::FILETYPE_NOT_FOUND };
 
-		std::vector<unsigned char> buffer(byteSize);
-		fileStream.seekg(byteOffset, std::ios::beg);
-		fileStream.read(reinterpret_cast<char*>(buffer.data()), byteSize);
+		const uint16_t targetByteOffset = sigMap.at(fileID).offset;
+		const uint16_t targetByteSize = sigMap.at(fileID).signature.size();
+		uint16_t maxSignatureSize = 0;
+		for (const auto& item : sigMap) {
+			maxSignatureSize = std::max(static_cast<uint16_t>(item.second.signature.size()), maxSignatureSize);
+		}
+
+		std::vector<unsigned char> buffer(maxSignatureSize);
+		fileStream.seekg(targetByteOffset, std::ios::beg);
+		fileStream.read(reinterpret_cast<char*>(buffer.data()), maxSignatureSize);
 
 		// if hit eof early
-		if (fileStream.gcount() != byteSize) return { false, FileContext::EARLY_EOF };
+		if (fileStream.gcount() < targetByteSize) return { false, FileContext::EARLY_EOF };
 
 		// if the user's file has the same signature as the current option, then that means they dont need a conversion.
-		if (std::memcmp(buffer.data(), sigMap.at(fileID).signature.data(), byteSize) == 0)
+		if (std::memcmp(buffer.data(), sigMap.at(fileID).signature.data(), targetByteSize) == 0)
 			return { false, FileContext::CONVERSION_NOT_NEEDED };
+
+		/* to check if the specified exists in the map. */
+		bool exists = false;
+		for (const auto& signature : sigMap) {
+			const auto& sig = signature.second.signature;
+			if (buffer.size() >= sig.size() && std::memcmp(buffer.data(), sig.data(), sig.size()) == 0) {
+				exists = true;
+				break;
+			}
+		}
+		if (!exists) return { false, FileContext::FILETYPE_NOT_FOUND };
+
 		return { true, std::nullopt };
 	}
 	catch (const std::exception& e) {

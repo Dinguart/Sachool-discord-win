@@ -16,7 +16,7 @@ using namespace cimg_library;
 
 // the return circumstance
 enum class FileContext {
-	EXCEPTION, EARLY_EOF, CONVERSION_NOT_NEEDED
+	EXCEPTION, EARLY_EOF, CONVERSION_NOT_NEEDED, FILETYPE_NOT_FOUND
 };
 
 struct ConvertedImage {
@@ -28,6 +28,6 @@ std::string getImageName(std::string& imageUrl);
 
 std::string changeImageExtension(const std::string& imageName, const std::string& extension);
 
-std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::string& fileID, std::ifstream& fileStream, const std::map<std::string, const FileSpecification> sigMap, std::string& inputImageName);
+std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::string& fileID, std::ifstream& fileStream, const std::map<std::string, const FileSpecification> imgMap, std::string& inputImageName);
 
 std::pair<bool, std::optional<FileContext>> signatureCheck(std::ifstream& fileStream, const std::string& fileID, const std::map<std::string, const FileSpecification> sigMap);

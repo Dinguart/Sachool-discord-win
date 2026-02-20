@@ -7,7 +7,7 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, con
     const dpp::snowflake channelID = event.command.get_channel().id;
     constStr userPfp = event.command.get_issuing_user().get_avatar_url();
     
-    event.thinking(true); // use edit response to reply
+    event.thinking(false); // use edit response to reply
 
     if (subcommand.name == "add") {
         str name = std::get<str>(event.get_parameter("name"));

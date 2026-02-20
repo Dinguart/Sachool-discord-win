@@ -22,9 +22,13 @@ namespace FileFormatSignatures {
 	const FileSpecification jpegSpec = { {0xFF, 0xD8, 0xFF }, JPEG_BYTE_OFFSET };
 	const FileSpecification ppmSpec = { {'P', '6'}, PPM_BYTE_OFFSET };
 
-	const std::map<std::string, const FileSpecification> signatureMap = {
+	const std::map<std::string, const FileSpecification> imageMap = {
 		{"png", pngSpec},
 		{"jpeg", jpegSpec},
 		{"ppm", ppmSpec}
+	};
+
+	const std::map<std::string, const FileSpecification> textMap = {
+
 	};
 }
