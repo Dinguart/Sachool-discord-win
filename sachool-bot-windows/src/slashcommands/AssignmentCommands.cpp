@@ -10,9 +10,27 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, con
     event.thinking(false); // use edit response to reply
 
     if (subcommand.name == "add") {
+
         str name = std::get<str>(event.get_parameter("name"));
         str subject = std::get<str>(event.get_parameter("subject"));
         str dueDate = std::get<str>(event.get_parameter("duedate"));
+
+        if (auto checkDate = DateLogic::isValidDateFormat(dueDate); checkDate.has_value()) {
+            switch (checkDate.value()) {
+            case DateLogic::Context::EXCEPTION:
+                co_await event.co_edit_response("Invalid date format, make sure to use numbers for the date.");
+                co_return;
+                break;
+            case DateLogic::Context::INVALID_FORMAT:
+                co_await event.co_edit_response("Invalid date format, make sure it is of yyyy/mm/dd.");
+                co_return;
+                break;
+            case DateLogic::Context::PAST_DUE:
+                co_await event.co_edit_response("Unable to submit this assignment, it is already due.");
+                co_return;
+                break;
+            }
+        }
 
         auto fileIDParam = event.get_parameter("file");
         dpp::snowflake fileID;
@@ -56,7 +74,7 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, con
         assignmentEmbed
             .set_color(dpp::colors::green_leaves)
             .set_title("Assignment " + name + " added!")
-            .set_description(whenDue(dueDate))
+            .set_description(DateLogic::whenDue(dueDate))
             .set_thumbnail(userPfp)
             .add_field(
                 "Assignment importance",
@@ -138,5 +156,8 @@ dpp::task<void> handleAssignmentCommands(std::shared_ptr<dpp::cluster>& bot, con
 
         co_await event.co_edit_response(viewSelect);
         co_return;
+    }
+    else if (subcommand.name == "convert-document") {
+
     }
 }

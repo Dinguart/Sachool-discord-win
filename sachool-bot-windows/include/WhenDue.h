@@ -3,11 +3,24 @@
 #include <chrono>
 #include <format>
 #include <print>
+#include <exception>
+#include <optional>
 
-struct Date {
-	int16_t year, month, day;
-};
+namespace DateLogic {
+	enum class Context {
+		INVALID_FORMAT, PAST_DUE, EXCEPTION
+	};
 
-Date dateParse(const std::string& date);
+	struct Date {
+		int16_t year, month, day;
+	};
 
-std::string whenDue(const std::string& date);
+	Date dateParse(const std::string& date);
+
+	std::string whenDue(const std::string& date);
+
+	/* @brief parses current date in yyyy/mm/dd format */
+	std::optional<Date> parseCurrDate();
+
+	std::optional<Context> isValidDateFormat(const std::string& input);
+}

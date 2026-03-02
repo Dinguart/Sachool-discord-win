@@ -38,16 +38,22 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 
 	/*
 	@brief
-	lets you convert an assignment via dropdown menu
+	lets you convert an assignment (image conversion) via dropdown menu
 	*/
 	assignment.add_option(
 		dpp::command_option(dpp::co_sub_command, "convert-image", "Will convert to different image format.")
 		.add_option(dpp::command_option(dpp::co_string, "name", "name of the assignment to convert.", true))
 	);
 
+	assignment.add_option(
+		dpp::command_option(dpp::co_sub_command, "convert-document", "Converts assignment to different document formats.")
+		.add_option(dpp::command_option(dpp::co_string, "name", "name of the assignment to convert.", true))
+	);
+
+
 	utility.add_option(
 		dpp::command_option(dpp::co_sub_command, "convert-image", "Allows you to convert images to different formats within discord!.")
-		.add_option(dpp::command_option(dpp::co_attachment, "image", "The image to convert."))
+		.add_option(dpp::command_option(dpp::co_attachment, "image", "The image to convert.", true))
 	);
 
 

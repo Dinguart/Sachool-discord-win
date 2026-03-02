@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
+#include <print>
 
 bool findString(const std::string& original, const std::string& substr);
 
