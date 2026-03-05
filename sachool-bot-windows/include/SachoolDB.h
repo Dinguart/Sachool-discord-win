@@ -45,14 +45,24 @@ struct Assignment {
 namespace Database {
 	class SachoolDB {
 	private:
+		SachoolDB(constStrRef host, constStrRef user,
+			constStrRef password, constStrRef database);
+
 		sql::Connection* m_Con;
 		str m_Host, m_User, m_Password, m_Database;
 		bool m_Connected;
 
 		bool assignmentExists(constStrRef discordID, constStrRef assignmentName) const;
+		bool isTableEmpty(constStr sqlTable) const;
 	public:
-		SachoolDB(constStrRef host, constStrRef user,
+		/* singleton class, as database is only created once in main */
+		static SachoolDB& getInstance(constStrRef host, constStrRef user,
 			constStrRef password, constStrRef database);
+			
+		// delete copy & assignment operators
+		SachoolDB(const SachoolDB&) = delete;
+		void operator=(const SachoolDB&) = delete;
+
 		~SachoolDB();
 
 		bool connect();
@@ -60,9 +70,12 @@ namespace Database {
 		bool isConnected() const;
 		void setDatabase(constStrRef database);
 
+		// state checking
+
 		// attachment methods
 		bool setImageUrl(constStrRef discordID, constStrRef Url) const;
 		std::optional<str> getImageUrl(constStrRef discordID) const;
+		bool removeImageUrl(constStrRef discordID) const;
 
 		// simple getters
 		std::optional<Assignment> getAssignmentProperties(constStrRef discordID, constStrRef assignmentName) const;

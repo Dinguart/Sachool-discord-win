@@ -6,6 +6,12 @@ Database::SachoolDB::SachoolDB(constStrRef host, constStrRef user,
 	m_Database(database), m_Con(nullptr), m_Connected(false) {
 }
 
+Database::SachoolDB& Database::SachoolDB::getInstance(constStrRef host, constStrRef user,
+	constStrRef password, constStrRef database) {
+	static SachoolDB db(host, user, password, database);
+	return db;
+}
+
 Database::SachoolDB::~SachoolDB() {
 	disconnect();
 }
@@ -176,6 +182,31 @@ bool Database::SachoolDB::assignmentExists(constStrRef discordID, constStrRef as
 	return false;
 }
 
+bool Database::SachoolDB::isTableEmpty(constStr sqlTable) const {
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return false;
+	}
+
+	try {
+		std::unique_ptr<sql::PreparedStatement> stmt(
+			m_Con->prepareStatement("SELECT EXISTS(SELECT 1 FROM " + sqlTable + ") AS Output")
+		);
+		std::unique_ptr<sql::ResultSet> res(stmt->executeQuery());
+
+		if (res->next()) {
+			if (res->getInt("Output") == 1) return false;
+		}
+		return true;
+	}
+	catch (const sql::SQLException& e) {
+		std::println("Table is empty exception (sql) : {}", e.what());
+	}
+	catch (const std::exception& e) {
+		std::println("Table is empty exception (std) : {}", e.what());
+	}
+}
+
 bool Database::SachoolDB::setImageUrl(constStrRef discordID, constStrRef Url) const {
 	if (!m_Connected) {
 		std::println("Not connected to the database.\n");
@@ -209,7 +240,7 @@ std::optional<str> Database::SachoolDB::getImageUrl(constStrRef discordID) const
 
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
-			m_Con->prepareStatement("SELECT * FROM temporaryimages WHERE discordid = ?")
+			m_Con->prepareStatement("SELECT * FROM temporaryimages WHERE discordid = ? ORDER BY url DESC")
 		);
 		stmt->setString(1, discordID);
 		std::unique_ptr<sql::ResultSet> res(stmt->executeQuery());
@@ -228,4 +259,32 @@ std::optional<str> Database::SachoolDB::getImageUrl(constStrRef discordID) const
 		std::println("Database assignment existence exception (std) : {}", e.what());
 	}
 	return std::nullopt;
+}
+
+bool Database::SachoolDB::removeImageUrl(constStrRef discordID) const {
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return false;
+	}
+
+	try {
+		std::unique_ptr<sql::PreparedStatement> stmt(
+			m_Con->prepareStatement(
+				"DELETE FROM temporaryimages WHERE discordid = ?"
+			)
+		);
+		stmt->setString(1, discordID);
+		stmt->executeQuery();
+
+		if (!isTableEmpty("temporaryimages")) return false;
+
+		return true;
+	}
+	catch (const sql::SQLException& e) {
+		std::println("Database tempimage removal exception (sql) : {}", e.what());
+	}
+	catch (const std::exception& e) {
+		std::println("Database tempimage removal exception (std) : {}", e.what());
+	}
+	return false;
 }

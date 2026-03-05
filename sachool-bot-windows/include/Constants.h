@@ -2,6 +2,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <optional>
+#include "ReadFile.h"
+
+extern std::optional<fileMap> configMap;
 
 namespace FileFormatSignatures {
 	

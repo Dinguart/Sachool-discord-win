@@ -4,9 +4,11 @@
 #include <vector>
 
 #include "SachoolDB.h"
+#include "SachoolHttp.h"
 
 #include "AssignmentCommands.h"
 #include "UtilityCommands.h"
+#include "AICommands.h"
 
 #include "FindString.h"
 #include "FileUtil.h"
@@ -14,6 +16,6 @@
 
 void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_t& event);
 
-dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, Database::SachoolDB& db);
+dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, Database::SachoolDB& db, Http::SachoolHttp& http);
 
 dpp::task<void> handleClickEvents(std::shared_ptr <dpp::cluster>& bot, const dpp::select_click_t& event, Database::SachoolDB& db);

@@ -41,7 +41,7 @@ std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::st
 
 	// dont allow pdf to image conversion, but do display the pdf somehow.
 	try {
-		CImg<unsigned char> img(inputImageName.c_str());
+		cimg_library::CImg<unsigned char> img(inputImageName.c_str());
 
 		// make out filename
 		std::string outputImageName = changeImageExtension(inputImageName, fileID);
@@ -57,9 +57,9 @@ std::pair<ConvertedImage, std::optional<FileContext>> convertImage(const std::st
 		// figure out the architecture for this.
 		// TODO: do something with the converted image.
 		inputImageName = outputImageName;
-		return { {std::make_unique<CImg<unsigned char>>(img), true}, std::nullopt};
+		return { {std::make_unique<cimg_library::CImg<unsigned char>>(img), true}, std::nullopt};
 	}
-	catch (const CImgException& e) {
+	catch (const cimg_library::CImgException& e) {
 		std::println("File conversion exception (CImg) : {}", e.what());
 	}
 	catch (const std::exception& e) {

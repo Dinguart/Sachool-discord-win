@@ -1,6 +1,6 @@
 #include "../include/Sachool.h"
 
-Bot::Sachool::Sachool(const std::string& botToken, Database::SachoolDB& db) : m_BotToken(botToken), m_Db(db) {
+Bot::Sachool::Sachool(const std::string& botToken, Database::SachoolDB& db, Http::SachoolHttp& http) : m_BotToken(botToken), m_Db(db), m_Http(http) {
 	m_Bot = std::make_shared<dpp::cluster>(botToken);
 
 	log();
@@ -8,6 +8,11 @@ Bot::Sachool::Sachool(const std::string& botToken, Database::SachoolDB& db) : m_
 	commandsHandler();
 	clickHandler();
 	runBot();
+}
+
+Bot::Sachool& Bot::Sachool::getInstance(const std::string& botToken, Database::SachoolDB& db, Http::SachoolHttp& http) {
+	static Sachool sachool(botToken, db, http);
+	return sachool;
 }
 
 void Bot::Sachool::log() {
@@ -24,7 +29,7 @@ void Bot::Sachool::commandsSetup() {
 
 void Bot::Sachool::commandsHandler() {
 	m_Bot->on_slashcommand([this](const dpp::slashcommand_t& event) -> dpp::task<void> {
-		co_await handleSlashCommands(m_Bot, event, m_Db);
+		co_await handleSlashCommands(m_Bot, event, m_Db, m_Http);
 		co_return;
 	});
 }

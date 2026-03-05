@@ -5,11 +5,15 @@
 
 #include "SlashCommands.h"
 #include "SachoolDB.h"
+#include "SachoolHttp.h"
 
 namespace Bot {
 	class Sachool {
 	private:
-		Database::SachoolDB m_Db;
+		explicit Sachool(const std::string& botToken, Database::SachoolDB& db, Http::SachoolHttp& http);
+		
+		Database::SachoolDB& m_Db;
+		Http::SachoolHttp& m_Http;
 		std::shared_ptr<dpp::cluster> m_Bot;
 		std::string m_BotToken;
 
@@ -19,7 +23,13 @@ namespace Bot {
 		void runBot();
 
 	public:
-		explicit Sachool(const std::string& botToken, Database::SachoolDB& db);
+		// singleton
+		static Sachool& getInstance(const std::string& botToken, Database::SachoolDB& db, Http::SachoolHttp& http);
+		
+		// delete copy & assignment operator 
+		Sachool(Sachool&) = delete;
+		void operator=(Sachool&) = delete;
+
 		void log();
 	};
 }

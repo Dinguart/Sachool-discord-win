@@ -48,6 +48,9 @@
     <ClCompile Include="src\slashcommands\UtilityCommands.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\slashcommands\AICommands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ReadFile.h">
@@ -80,13 +83,13 @@
     <ClInclude Include="external-includes\CImg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="external-includes\httplib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\SachoolHttp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\UtilityCommands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AICommands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

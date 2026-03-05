@@ -1,4 +1,6 @@
 #pragma once
+#include <dpp/dpp.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -12,7 +14,6 @@
 #include "../external-includes/CImg.h"
 
 using namespace FileFormatSignatures;
-using namespace cimg_library;
 
 // the return circumstance
 enum class FileContext {
@@ -20,7 +21,7 @@ enum class FileContext {
 };
 
 struct ConvertedImage {
-	std::unique_ptr<CImg<unsigned char>> fileData;
+	std::unique_ptr<cimg_library::CImg<unsigned char>> fileData;
 	bool successfullyConverted;
 };
 

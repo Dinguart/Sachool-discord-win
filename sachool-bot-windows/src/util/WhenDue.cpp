@@ -57,10 +57,6 @@ std::optional<Date> DateLogic::parseCurrDate() {
 	std::string month = currDateStr.substr(firstPos + 1, secondPos);
 	std::string day = currDateStr.substr(currDateStr.find_last_of('/')+1);
 
-	std::println("{}\n", year);
-	std::println("{}\n", month);
-	std::println("{}\n", day);
-
 	try { 
 		Date d = { static_cast<int16_t>(std::stoi(year)), static_cast<int16_t>(std::stoi(month)), static_cast<int16_t>(std::stoi(day)) }; 
 		return d;
@@ -74,7 +70,6 @@ std::optional<Date> DateLogic::parseCurrDate() {
 std::optional<Context> DateLogic::isValidDateFormat(const std::string& input) {
 	if (!input.contains('/') || input.size() != 10) return Context::INVALID_FORMAT;
 	uint16_t slashCount = 0;
-	std::println("reacged");
 	std::string year, month, day;
 
 	/*
@@ -97,10 +92,6 @@ std::optional<Context> DateLogic::isValidDateFormat(const std::string& input) {
 	day = input.substr(input.find_last_of('/')+1);
 
 	int16_t yearNum, monthNum, dayNum;
-
-	std::println("{}\n", year);
-	std::println("{}\n", month);
-	std::println("{}\n", day);
 
 
 	if (year.size() != 4 || month.size() != 2 || day.size() != 2) return Context::INVALID_FORMAT;

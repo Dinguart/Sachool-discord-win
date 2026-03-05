@@ -7,7 +7,7 @@ dpp::task<void> handleUtilityCommands(std::shared_ptr<dpp::cluster>& bot, const 
     const dpp::snowflake channelID = event.command.get_channel().id;
     constStr userPfp = event.command.get_issuing_user().get_avatar_url();
 
-    event.thinking(true);
+    event.thinking();
 
     if (subcommand.name == "convert-image") {
         auto attachmentIDParam = event.get_parameter("image");

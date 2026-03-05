@@ -12,9 +12,10 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 	// TODO: think about which APIs to use.
 	std::vector<dpp::slashcommand> commands;
 
-	// assignment subcommands
+	// subcommand groups
 	dpp::slashcommand assignment("Assignment", "Commands for assignments.", bot->me.id);
 	dpp::slashcommand utility("Utility", "General usage commands for utility.", bot->me.id);
+	dpp::slashcommand ai("AI", "Commands involving an AI model for assistance.", bot->me.id);
 	/*
 	@brief
 	adds an assignment to the database, with file & importance being optional parameters
@@ -56,14 +57,20 @@ void registerSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::ready_
 		.add_option(dpp::command_option(dpp::co_attachment, "image", "The image to convert.", true))
 	);
 
+	// ai subcommands
+	ai.add_option(
+		dpp::command_option(dpp::co_sub_command, "prompt", "Allows you to send a prompt to the AI model (5 prompt limit for each user)")
+		.add_option(dpp::command_option(dpp::co_string, "message", "The prompt you would like to send", true))
+	);
 
 	commands.push_back(assignment);
 	commands.push_back(utility);
+	commands.push_back(ai);
 
 	bot->global_bulk_command_create(commands);
 }
 
-dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, Database::SachoolDB& db) {
+dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dpp::slashcommand_t& event, Database::SachoolDB& db, Http::SachoolHttp& http) {
 	str commandName = event.command.get_command_name();
 
 	if (commandName == "assignment") {
@@ -71,6 +78,9 @@ dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dp
 	}
 	else if (commandName == "utility") {
 		co_await handleUtilityCommands(bot, event, db);
+	}
+	else if (commandName == "ai") {
+		co_await handleAICommands(bot, event, db, http);
 	}
 
 	co_return;
@@ -117,6 +127,10 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 		);
 		if (httpRes.status == 200) {
 			// check the signatures
+			std::ofstream ofile(assignmentName, std::ios_base::binary);
+			ofile.write(httpRes.body.c_str(), httpRes.body.size());
+			ofile.close();
+
 			std::ifstream ifile(assignmentName, std::ios_base::binary);
 			auto converted = convertImage(pair.first, ifile, FileFormatSignatures::imageMap, assignmentName);
 			if (!converted.first.successfullyConverted) {
@@ -138,13 +152,12 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 				co_return;
 			}
 
-			std::unique_ptr<CImg<unsigned char>> ConvertedImage = std::move(converted.first.fileData);
+			std::unique_ptr<cimg_library::CImg<unsigned char>> ConvertedImage = std::move(converted.first.fileData);
 			/* save the image to a buffer depending on the file format, then send the buffer data to the request */
 			/* send the image to a server endpoint for retrieval of the url */
 			
 			str outputPath = assignmentName;
 			dpp::message msg;
-			msg.set_flags(dpp::m_ephemeral);
 			msg.add_file(outputPath, dpp::utility::read_file(outputPath));
 
 
@@ -152,7 +165,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 		}
 		else {
 			co_await event.co_edit_response("An unexpected error was found when attempting to fetch to convert assignment.");
-			std::println("Conversion assignment exception (http) : {}", httpRes.status);
+			std::println("image fetch exception (http) : {}", httpRes.status);
 		}
 
 
@@ -165,6 +178,12 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 			"";
 		if (imageURL.empty()) {
 			co_await event.co_edit_response("Unexpected problem converting image.");
+			co_return;
+		}
+
+		// now remove from the db
+		if (bool removed = db.removeImageUrl(userID); !removed) {
+			co_await event.co_edit_response("Unexpected issue converting image.");
 			co_return;
 		}
 
@@ -201,13 +220,12 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 				co_return;
 			}
 
-			std::unique_ptr<CImg<unsigned char>> ConvertedImage = std::move(converted.first.fileData);
+			std::unique_ptr<cimg_library::CImg<unsigned char>> ConvertedImage = std::move(converted.first.fileData);
 			/* save the image to a buffer depending on the file format, then send the buffer data to the request */
 			/* send the image to a server endpoint for retrieval of the url */
 
 			str outputPath = imageName;
 			dpp::message msg;
-			msg.set_flags(dpp::m_ephemeral);
 			msg.add_file(outputPath, dpp::utility::read_file(outputPath));
 
 
@@ -215,6 +233,7 @@ dpp::task<void> handleClickEvents(std::shared_ptr<dpp::cluster>& bot, const dpp:
 		}
 		else {
 			co_await event.co_edit_response("An unexpected error was found when attempting to fetch to convert assignment.");
+			std::println("image fetch exception (http) : {}", httpRes.status);
 		}
 	}
 	else {
