@@ -12,7 +12,6 @@ deny request
 
 
 */
-
 Http::SachoolHttp::SachoolHttp(Database::SachoolDB& db) : m_Db(db) {
 	m_ApiKey = configMap->at("GROQ_API_KEY");
 	m_GroqPrompt = "";
@@ -24,18 +23,35 @@ Http::SachoolHttp& Http::SachoolHttp::getInstance(Database::SachoolDB& db) {
 	return http;
 }
 
-Http::SachoolHttp::SachoolHttp(const std::string& prompt, Database::SachoolDB& db) : m_Db(db) {
+Http::SachoolHttp::SachoolHttp(std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db) : m_Bot(bot), m_Db(db) {
 	m_ApiKey = configMap->at("GROQ_API_KEY");
-	m_GroqPrompt = prompt;
+	m_GroqPrompt = "";
+	setRequestModel();
 }
 
-Http::SachoolHttp& Http::SachoolHttp::getInstance(const std::string& prompt, Database::SachoolDB& db) {
-	static SachoolHttp http(prompt, db);
+Http::SachoolHttp& Http::SachoolHttp::getInstance(std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db) {
+	static SachoolHttp http(bot, db);
+	return http;
+}
+
+Http::SachoolHttp::SachoolHttp(const std::string& prompt, std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db) : m_Bot(bot), m_Db(db) {
+	m_ApiKey = configMap->at("GROQ_API_KEY");
+	m_GroqPrompt = prompt;
+	setRequestModel();
+}
+
+Http::SachoolHttp& Http::SachoolHttp::getInstance(const std::string& prompt, std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db) {
+	static SachoolHttp http(prompt, bot, db);
 	return http;
 }
 
 void Http::SachoolHttp::setRequestModel() {
 	m_Body["model"] = "llama-3.3-70b-versatile";
+	m_Body["messages"] = nlohmann::json::array();
+}
+
+void Http::SachoolHttp::setBot(std::shared_ptr<dpp::cluster> bot) { 
+	m_Bot = bot;
 }
 
 void Http::SachoolHttp::setPrompt(const std::string& prompt) {
@@ -49,8 +65,10 @@ std::string Http::SachoolHttp::getLastChat() const {
 
 dpp::task<void> Http::SachoolHttp::sendChat() {
 	try {
-		m_Body["messages"]["role"] = "user";
-		m_Body["messages"]["content"] = m_GroqPrompt;
+		m_Body["messages"].push_back({
+			{"role", "user"},
+			{"content", m_GroqPrompt}
+		});
 
 		auto response = co_await m_Bot->co_request(
 			"https://api.groq.com/openai/v1/chat/completions",
@@ -65,15 +83,27 @@ dpp::task<void> Http::SachoolHttp::sendChat() {
 		// add this to ai command group
 
 		if (response.status == 200) {
-			m_GroqResponse = response.body;
+			nlohmann::json output;
+			output = nlohmann::json::parse(response.body);
+
+			m_GroqResponse = output["choices"][0]["message"]["content"].get<std::string>();
+			
+			// save the chat in messages array
+			m_Body["messages"].push_back({
+				{"role", "assistant"},
+				{"content", m_GroqResponse}
+			});
+			
+			
 			co_return;
 		}
 		else if (response.status == 429) {
 			// resend with a timer, if fails then tell user to try again later
+			std::println("429");
 		}
 		else {
 			// handle other stuff
-
+			std::println("other error: {}", response.status);
 		}
 	}
 	catch (const dpp::exception& e) {

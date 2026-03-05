@@ -13,8 +13,9 @@
 namespace Http {
 	class SachoolHttp {
 	private:
-		explicit SachoolHttp(Database::SachoolDB& db);
-        SachoolHttp(const std::string& prompt, Database::SachoolDB& db);
+        explicit SachoolHttp(Database::SachoolDB& db);
+		SachoolHttp(std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db);
+        SachoolHttp(const std::string& prompt, std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db);
 
         Database::SachoolDB& m_Db;
         std::shared_ptr<dpp::cluster> m_Bot;
@@ -26,13 +27,15 @@ namespace Http {
 	public:
         // singleton
         static SachoolHttp& getInstance(Database::SachoolDB& db);
-        static SachoolHttp& getInstance(const std::string& prompt, Database::SachoolDB& db);
+        static SachoolHttp& getInstance(std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db);
+        static SachoolHttp& getInstance(const std::string& prompt, std::shared_ptr<dpp::cluster> bot, Database::SachoolDB& db);
 
         // delete copy & assignment operator
         SachoolHttp(SachoolHttp&) = delete;
         void operator=(SachoolHttp&) = delete;
 
         /* thisll send the prompt to the openai model via the api */
+        void setBot(std::shared_ptr<dpp::cluster> bot);
         void setPrompt(const std::string& prompt);
         dpp::task<void> sendChat();
         std::string getLastChat() const;

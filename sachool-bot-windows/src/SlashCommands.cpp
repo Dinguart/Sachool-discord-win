@@ -80,7 +80,7 @@ dpp::task<void> handleSlashCommands(std::shared_ptr<dpp::cluster>& bot, const dp
 		co_await handleUtilityCommands(bot, event, db);
 	}
 	else if (commandName == "ai") {
-		co_await handleAICommands(bot, event, db, http);
+		co_await handleAICommands(bot, event, db);
 	}
 
 	co_return;
