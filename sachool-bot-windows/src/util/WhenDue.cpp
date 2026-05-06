@@ -2,20 +2,46 @@
 
 using namespace DateLogic;
 
-Date DateLogic::dateParse(const std::string& date) {
+std::optional<Date> DateLogic::dateParse(const std::string& date) {
 	size_t find = date.find('/');
 	std::string year = date.substr(0, find);
 	std::string newDate = date.substr(find + 1);
 	find = newDate.find('/');
 	std::string month = newDate.substr(0, find);
 	std::string day = newDate.substr(find + 1);
+	bool needsTime = false;
 
-	int16_t yearNum, monthNum, dayNum;
-	yearNum = std::stoul(year);
-	monthNum = std::stoul(month);
-	dayNum = std::stoul(day);
+	std::string hours, minutes, seconds;
 
-	return { yearNum, monthNum, dayNum };
+	if (date.find(':')) {
+		needsTime = true;
+		size_t firstPos = date.find_first_of(':');
+		hours = date.substr(0, firstPos);
+		size_t secondPos = date.substr(firstPos + 1).find_first_of(':');
+		minutes = date.substr(firstPos + 1, secondPos);
+		size_t finalPos = date.substr(secondPos + 1).find_first_of('.');
+		seconds = date.substr(secondPos + 1, finalPos);
+	}
+
+	int16_t yearNum, monthNum, dayNum, hourNum{}, minuteNum{}, secondNum{};
+
+
+	try {
+		yearNum = std::stoul(year);
+		monthNum = std::stoul(month);
+		dayNum = std::stoul(day);
+		if (needsTime) {
+			hourNum = std::stoul(hours);
+			minuteNum = std::stoul(minutes);
+			secondNum = std::stoul(seconds);
+		}
+	}
+	catch (const std::invalid_argument& e) {
+		std::println("Current date parse exception (std::exception) : {}", e.what());
+		return std::nullopt;
+	}
+	Date d = { yearNum, monthNum, dayNum, hourNum, minuteNum, secondNum };
+	return d;
 }
 
 std::string DateLogic::whenDue(const std::string& date) {
@@ -23,13 +49,13 @@ std::string DateLogic::whenDue(const std::string& date) {
 	auto currentDate = std::chrono::floor<std::chrono::days>(today);
 	std::string dateStr = std::format("{:%Y/%m/%d}", currentDate);
 
-	Date dueDate = DateLogic::dateParse(date);
-	Date currDate = DateLogic::dateParse(dateStr);
+	std::optional<Date> dueDate = DateLogic::dateParse(date);
+	std::optional<Date> currDate = DateLogic::dateParse(dateStr);
 
 	int16_t yearDiff, monthDiff, dayDiff;
-	yearDiff = dueDate.year - currDate.year;
-	monthDiff = dueDate.month - currDate.month;
-	dayDiff = dueDate.day - currDate.day;
+	yearDiff = dueDate->year - currDate->year;
+	monthDiff = dueDate->month - currDate->month;
+	dayDiff = dueDate->day - currDate->day;
 
 
 
@@ -50,20 +76,37 @@ std::optional<Date> DateLogic::parseCurrDate() {
 	auto currDate = std::chrono::utc_clock::now();
 	std::string currDateStr = std::format("{:%Y/%m/%d}", std::chrono::floor<std::chrono::days>(currDate));
 
+	std::chrono::time_point<std::chrono::utc_clock> currTime = currDate;
+	std::string dayInfoStr = std::format("{:%T}", currTime);
 
+	// parsing the date
 	size_t firstPos = currDateStr.find_first_of('/');
 	std::string year = currDateStr.substr(0, firstPos);
 	size_t secondPos = currDateStr.substr(firstPos + 1).find_first_of('/');
 	std::string month = currDateStr.substr(firstPos + 1, secondPos);
 	std::string day = currDateStr.substr(currDateStr.find_last_of('/')+1);
 
-	try { 
-		Date d = { static_cast<int16_t>(std::stoi(year)), static_cast<int16_t>(std::stoi(month)), static_cast<int16_t>(std::stoi(day)) }; 
+	try {  
+		// parsing time
+		firstPos = dayInfoStr.find_first_of(':');
+		std::string hours = dayInfoStr.substr(0, firstPos);
+		secondPos = dayInfoStr.substr(firstPos + 1).find_first_of(':');
+		std::string minutes = dayInfoStr.substr(firstPos + 1, secondPos);
+		size_t finalPos = dayInfoStr.substr(secondPos + 1).find_first_of('.');
+		std::string seconds = dayInfoStr.substr(secondPos + 1, finalPos);
+
+		Date d = { static_cast<int16_t>(std::stoi(year)), static_cast<int16_t>(std::stoi(month)), static_cast<int16_t>(std::stoi(day)), static_cast<int16_t>(std::stoi(hours)), static_cast<int16_t>(std::stoi(minutes)), static_cast<int16_t>(std::stoi(seconds))};
+
 		return d;
 	} catch (const std::invalid_argument& e) { 
 		std::println("Current date parse exception (std::exception) : {}", e.what()); 
 		return std::nullopt;
 	}
+}
+
+std::string DateLogic::getCurrDate() {
+	auto currDate = std::chrono::utc_clock::now();
+	return std::format("{:%Y/%m/%d}", std::chrono::floor<std::chrono::days>(currDate));
 }
 
 // yyyy/mm/dd
