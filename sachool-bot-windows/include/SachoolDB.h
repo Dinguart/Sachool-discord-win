@@ -12,16 +12,12 @@
 #include <format>
 #include <optional>
 #include <expected>
-#include <chrono>
 
 #include "FindString.h"
-#include "WhenDue.h"
 
 using str = std::string;
 using constStr = const std::string;
 using constStrRef = const std::string&;
-
-constexpr uint8_t TOKEN_LIMIT = 5;
 
 /*
 in this case, context refers to the context in which a function returns, this is usually for bool functions that require
@@ -56,11 +52,8 @@ namespace Database {
 		str m_Host, m_User, m_Password, m_Database;
 		bool m_Connected;
 
-		bool checkCurrentConnection() const;
 		bool assignmentExists(constStrRef discordID, constStrRef assignmentName) const;
 		bool isTableEmpty(constStr sqlTable) const;
-		// ai private methods
-		StateContext modifyTokenCount(constStrRef discordID, uint16_t amount, bool increment) const;
 	public:
 		/* singleton class, as database is only created once in main */
 		static SachoolDB& getInstance(constStrRef host, constStrRef user,
@@ -91,9 +84,5 @@ namespace Database {
 		*/
 		StateContext addAssignment(constStrRef discordID, const Assignment& assignment) const;
 		StateContext removeAssignment(constStrRef discordID, constStrRef assignmentName) const;
-
-		// ai methods
-		StateContext handleAITokens(constStrRef discordID) const;
-		bool UseAITokens(constStrRef discordID) const;
 	};
 }

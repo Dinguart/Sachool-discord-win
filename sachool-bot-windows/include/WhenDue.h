@@ -12,14 +12,12 @@ namespace DateLogic {
 	};
 
 	struct Date {
-		int16_t year, month, day, hours, minutes, seconds;
+		int16_t year, month, day;
 	};
 
-	std::optional<Date> dateParse(const std::string& date);
+	Date dateParse(const std::string& date);
 
 	std::string whenDue(const std::string& date);
-
-	std::string getCurrDate();
 
 	/* @brief parses current date in yyyy/mm/dd format */
 	std::optional<Date> parseCurrDate();

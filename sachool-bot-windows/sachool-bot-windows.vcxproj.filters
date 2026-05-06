@@ -92,9 +92,6 @@
     <ClInclude Include="include\AICommands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\tests\DatabaseTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.env" />

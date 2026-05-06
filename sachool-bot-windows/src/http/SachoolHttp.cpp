@@ -46,9 +46,8 @@ Http::SachoolHttp& Http::SachoolHttp::getInstance(const std::string& prompt, std
 }
 
 void Http::SachoolHttp::setRequestModel() {
-	m_Body["messages"] = nlohmann::json::array();
 	m_Body["model"] = "llama-3.3-70b-versatile";
-
+	m_Body["messages"] = nlohmann::json::array();
 }
 
 void Http::SachoolHttp::setBot(std::shared_ptr<dpp::cluster> bot) { 
@@ -59,24 +58,17 @@ void Http::SachoolHttp::setPrompt(const std::string& prompt) {
 	m_GroqPrompt = prompt;
 }
 
-dpp::task<void> Http::SachoolHttp::sendChat(const std::string& discordID) {
+std::string Http::SachoolHttp::getLastChat() const {
+	if (!m_GroqResponse.empty()) return m_GroqResponse;
+	return "";
+}
+
+dpp::task<void> Http::SachoolHttp::sendChat() {
 	try {
 		m_Body["messages"].push_back({
 			{"role", "user"},
 			{"content", m_GroqPrompt}
 		});
-
-		// add tokens if time passed
-		if (!m_Db.handleAITokens(discordID).state) {
-			m_GroqResponse = "Unexpected error occurred when trying to chat with the AI model, please try again later.";
-			co_return;
-		}
-
-		// consume a token.
-		if (!m_Db.UseAITokens(discordID)) {
-			m_GroqResponse = "Out of AI tokens, please wait for your tokens to refresh.";
-			co_return;
-		}
 
 		auto response = co_await m_Bot->co_request(
 			"https://api.groq.com/openai/v1/chat/completions",
@@ -102,6 +94,7 @@ dpp::task<void> Http::SachoolHttp::sendChat(const std::string& discordID) {
 				{"content", m_GroqResponse}
 			});
 			
+			
 			co_return;
 		}
 		else if (response.status == 429) {
@@ -123,9 +116,4 @@ dpp::task<void> Http::SachoolHttp::sendChat(const std::string& discordID) {
 		std::println("AI chat exception (not specified)");
 	}
 	co_return;
-}
-
-std::string Http::SachoolHttp::getLastchat() const {
-	if (!m_GroqResponse.empty()) return m_GroqResponse;
-	return "";
 }

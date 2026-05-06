@@ -22,6 +22,7 @@ namespace Http {
         nlohmann::json m_Body;
         std::string m_GroqPrompt, m_ApiKey;
         std::string m_GroqResponse;
+
         void setRequestModel();
 	public:
         // singleton
@@ -36,7 +37,7 @@ namespace Http {
         /* thisll send the prompt to the openai model via the api */
         void setBot(std::shared_ptr<dpp::cluster> bot);
         void setPrompt(const std::string& prompt);
-        dpp::task<void> sendChat(const std::string& discordID);
-        std::string getLastchat() const;
+        dpp::task<void> sendChat();
+        std::string getLastChat() const;
 	};
 }

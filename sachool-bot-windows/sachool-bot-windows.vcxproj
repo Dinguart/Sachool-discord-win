@@ -123,7 +123,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;STATIC_CONCPP;%(PreprocessorDefinitions);NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\Users\Henri Brizuela\Documents\libraries\mysql-connector-c++-9.5.0-winx64\include\jdbc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Henri Brizuela\OneDrive\Documents\libraries\mysql-connector-c++-9.5.0-winx64\include\jdbc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -132,7 +132,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>dpp.lib;mysqlcppconn-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\Henri Brizuela\Documents\libraries\mysql-connector-c++-9.5.0-winx64\lib64\vs14;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\Henri Brizuela\OneDrive\Documents\libraries\mysql-connector-c++-9.5.0-winx64\lib64\vs14;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -161,7 +161,6 @@
     <ClInclude Include="include\SachoolDB.h" />
     <ClInclude Include="include\SachoolHttp.h" />
     <ClInclude Include="include\SlashCommands.h" />
-    <ClInclude Include="include\tests\DatabaseTests.h" />
     <ClInclude Include="include\UtilityCommands.h" />
     <ClInclude Include="include\WhenDue.h" />
   </ItemGroup>

@@ -16,14 +16,6 @@ Database::SachoolDB::~SachoolDB() {
 	disconnect();
 }
 
-bool Database::SachoolDB::checkCurrentConnection() const {
-	if (!m_Connected) {
-		std::println("Not connected to the database.");
-		return false;
-	}
-	return true;
-}
-
 bool Database::SachoolDB::connect() {
 	try {
 		sql::mysql::MySQL_Driver* driver = sql::mysql::get_driver_instance();
@@ -61,7 +53,10 @@ void Database::SachoolDB::setDatabase(constStrRef database) {
 // assignment methods
 
 std::optional<Assignment> Database::SachoolDB::getAssignmentProperties(constStrRef discordID, constStrRef assignmentName) const {
-	if (!checkCurrentConnection()) return std::nullopt;
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return std::nullopt;
+	}
 
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
@@ -103,7 +98,10 @@ std::optional<Assignment> Database::SachoolDB::getAssignmentProperties(constStrR
 }
 
 StateContext Database::SachoolDB::addAssignment(constStrRef discordID, const Assignment& assignment) const {
-	if (!checkCurrentConnection()) return { Context::INTERNAL, false };
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return { Context::INTERNAL, false };
+	}
 
 	if (assignmentExists(discordID, assignment.name)) return { Context::NORMAL, false };
 
@@ -131,7 +129,10 @@ StateContext Database::SachoolDB::addAssignment(constStrRef discordID, const Ass
 }
 
 StateContext Database::SachoolDB::removeAssignment(constStrRef discordID, constStrRef assignmentName) const {
-	if (!checkCurrentConnection()) return { Context::INTERNAL, false };
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return { Context::INTERNAL, false };
+	}
 
 	if (!assignmentExists(discordID, assignmentName)) return { Context::NORMAL, false };
 
@@ -154,95 +155,8 @@ StateContext Database::SachoolDB::removeAssignment(constStrRef discordID, constS
 	return { Context::EXCEPTION, false };
 }
 
-StateContext Database::SachoolDB::handleAITokens(constStrRef discordID) const {
-	if (!checkCurrentConnection()) return { Context::INTERNAL, false };
-
-	try {
-		std::unique_ptr<sql::PreparedStatement> stmt(
-			m_Con->prepareStatement("SELECT lastmodified FROM useraiprofiles WHERE discordid = ?")
-		);
-		stmt->setString(1, discordID);
-
-		std::unique_ptr<sql::ResultSet> res(stmt->executeQuery());
-		if (res->next()) {
-			str lastModified = res->getString("lastmodified");
-			auto parseCurr = DateLogic::parseCurrDate();
-			if (!parseCurr.has_value()) { return { Context::EXCEPTION, false }; }
-			auto parseLastModified = DateLogic::dateParse(lastModified);
-
-			// if the next day passed reset their tokens
-			if (parseCurr->day > parseLastModified->day) {
-				modifyTokenCount(discordID, TOKEN_LIMIT, false);
-			}
-
-			// add 1 to their count every 24 minutes
-			int32_t timeBetween = (parseCurr->hours * 60 + parseCurr->minutes) - (parseLastModified->hours * 60 + parseLastModified->minutes);
-			if (parseCurr->day == parseLastModified->day && timeBetween > 24) {
-				if (timeBetween > 120) modifyTokenCount(discordID, 5, false);
-				else modifyTokenCount(discordID, static_cast<int16_t>(timeBetween / 24), false);
-			}
-
-			return { std::nullopt, true };
-		}
-		else {
-			std::string currDateStr = DateLogic::getCurrDate();
-			std::unique_ptr<sql::PreparedStatement> insertstmt(
-				m_Con->prepareStatement("INSERT INTO useraiprofiles (discordid, aitokens, lastmodified) VALUES (?, ?, ?)")
-			);
-			insertstmt->setString(1, discordID);
-			insertstmt->setUInt(2, TOKEN_LIMIT);
-			insertstmt->setString(3, currDateStr);
-			insertstmt->executeQuery();
-
-			// call it again now that the user is added.
-			return handleAITokens(discordID);
-		}
-	}
-	catch (const sql::SQLException& e) {
-		std::println("Database token handling exception (sql) : {}", e.what());
-	}
-	catch (const std::exception& e) {
-		std::println("Database token handling exception (std) : {}", e.what());
-	}
-	return { Context::EXCEPTION, false };
-}
-
-bool Database::SachoolDB::UseAITokens(constStrRef discordID) const {
-	if (!checkCurrentConnection()) return false;
-
-	// use a token, but if they dont have any, we prevent the usage of the command
-	try {
-		std::unique_ptr<sql::PreparedStatement> stmt(
-			m_Con->prepareStatement("SELECT * FROM useraiprofiles WHERE discordid = ?")
-		);
-		stmt->setString(1, discordID);
-
-		std::unique_ptr<sql::ResultSet> res(stmt->executeQuery());
-		if (res->next()) {
-			if (res->getUInt("aitokens") == 0) return false;
-		}
-
-		std::string currDateStr = DateLogic::getCurrDate();
-		std::unique_ptr<sql::PreparedStatement> updatestmt(
-			m_Con->prepareStatement("UPDATE useraiprofiles SET aitokens = aitokens - 1, lastmodified = ? WHERE discordid = ?")
-		);
-		updatestmt->setString(1, currDateStr);
-		updatestmt->setString(2, discordID);
-		updatestmt->executeQuery();
-		return true;
-	}
-	catch (const sql::SQLException& e) {
-		std::println("Database token usage exception (sql) : {}", e.what());
-	}
-	catch (const std::exception& e) {
-		std::println("Database token usage exception (std) : {}", e.what());
-	}
-	return false;
-}
-
-bool Database::SachoolDB::assignmentExists(constStrRef discordID, constStrRef assignmentName) const {
-	if (!checkCurrentConnection()) return false;
-	
+bool Database::SachoolDB::assignmentExists(constStrRef discordID, constStrRef assignmentName) const
+{
 	nlohmann::json json;
 	str assignmentString;
 	try {
@@ -269,7 +183,10 @@ bool Database::SachoolDB::assignmentExists(constStrRef discordID, constStrRef as
 }
 
 bool Database::SachoolDB::isTableEmpty(constStr sqlTable) const {
-	if (!checkCurrentConnection()) return false;
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return false;
+	}
 
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
@@ -290,50 +207,11 @@ bool Database::SachoolDB::isTableEmpty(constStr sqlTable) const {
 	}
 }
 
-StateContext Database::SachoolDB::modifyTokenCount(constStrRef discordID, uint16_t amount, bool increment) const {
-	if (!checkCurrentConnection()) return { Context::INTERNAL, false };
-
-	try {
-		std::unique_ptr<sql::PreparedStatement> stmt(
-			m_Con->prepareStatement("SELECT * FROM useraiprofiles WHERE discordid = ?")
-		);
-		stmt->setString(1, discordID);
-		std::unique_ptr<sql::ResultSet> res(stmt->executeQuery());
-
-		std::optional<str> tokenstmt = std::nullopt;
-		if (res->next()) {
-			uint16_t tokens = res->getUInt("aitokens");
-			std::string currDateStr = DateLogic::getCurrDate();
-			if (increment) {
-				if (tokens + amount < TOKEN_LIMIT) {
-					tokenstmt = std::format("UPDATE useraiprofiles SET aitokens = aitokens + {}, lastmodified = {} WHERE discordid = {}", amount, currDateStr, discordID);
-				}
-			}
-			else {
-				if (tokens < amount) {
-					tokenstmt = std::format("UPDATE useraiprofiles SET aitokens = {}, lastmodified = {} WHERE discordid = {}", amount, currDateStr, discordID);
-				}
-			}
-		}
-		if (!tokenstmt.has_value()) return { Context::NORMAL, false };
-
-		std::unique_ptr<sql::PreparedStatement> updatestmt(
-			m_Con->prepareStatement(tokenstmt.value())
-		);
-		stmt->executeQuery();
-		return { std::nullopt, true };
-	}
-	catch (const sql::SQLException& e) {
-		std::println("Database assignment existence exception (sql) : {}", e.what());
-	}
-	catch (const std::exception& e) {
-		std::println("Database assignment existence exception (std) : {}", e.what());
-	}
-	return { Context::EXCEPTION, false };
-}
-
 bool Database::SachoolDB::setImageUrl(constStrRef discordID, constStrRef Url) const {
-	if (!checkCurrentConnection()) return false;
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return false;
+	}
 
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
@@ -355,7 +233,10 @@ bool Database::SachoolDB::setImageUrl(constStrRef discordID, constStrRef Url) co
 }
 
 std::optional<str> Database::SachoolDB::getImageUrl(constStrRef discordID) const {
-	if (!checkCurrentConnection()) return std::nullopt;
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return std::nullopt;
+	}
 
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
@@ -381,7 +262,10 @@ std::optional<str> Database::SachoolDB::getImageUrl(constStrRef discordID) const
 }
 
 bool Database::SachoolDB::removeImageUrl(constStrRef discordID) const {
-	if (!checkCurrentConnection()) return false;
+	if (!m_Connected) {
+		std::println("Not connected to the database.\n");
+		return false;
+	}
 
 	try {
 		std::unique_ptr<sql::PreparedStatement> stmt(
