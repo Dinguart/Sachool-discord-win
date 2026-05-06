@@ -11,17 +11,15 @@ dpp::task<void> handleAICommands(std::shared_ptr<dpp::cluster>& bot, const dpp::
 
     event.thinking(false); // use edit response to reply
 
-
-
     if (subcommand.name == "prompt") {
         str prompt = std::get<str>(event.get_parameter("message"));
     
         http.setPrompt(prompt);
         http.setBot(bot);
 
-        co_await http.sendChat();
+        co_await http.sendChat(userID.str());
 
-        str response = http.getLastChat();
+        str response = http.getLastchat();
         if (response.empty()) {
             co_await event.co_edit_response("Unable to retrieve chat, please try again later.");
             co_return;
